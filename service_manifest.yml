@@ -46,6 +46,10 @@ submission_params:
     name: dynamic_submit
     type: bool
     value: false
+  - default: false
+    name: analyze_relationship
+    type: bool
+    value: false
   - default: "contacted_ips,contacted_domains,contacted_urls,behaviours"
     name: relationships
     type: str

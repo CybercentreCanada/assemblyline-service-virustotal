@@ -8,10 +8,10 @@ from assemblyline_v4_service.common.base import ServiceBase
 from assemblyline_v4_service.common.request import ServiceRequest
 from assemblyline_v4_service.common.result import Result, ResultSection, BODY_FORMAT
 from assemblyline_v4_service.common.virustotal.common.processing import AVResultsProcessor
-from assemblyline_v4_service.common.virustotal.file import v3 as parse_file_report
+from assemblyline_v4_service.common.virustotal.file import v3 as parse_file_report, attach_ontology as append_file_ontology
 from assemblyline_v4_service.common.virustotal.url import v3 as parse_url_report
 from assemblyline_v4_service.common.virustotal.ip_domain import v3 as parse_network_report
-from assemblyline_v4_service.common.virustotal.behaviour import v3 as parse_sandbox_report
+from assemblyline_v4_service.common.virustotal.behaviour import v3 as parse_sandbox_report, attach_ontology as append_sandbox_ontology
 
 
 MAX_RETRY = 3
@@ -76,24 +76,29 @@ class VirusTotal(ServiceBase):
             return
 
         def download_sandbox_files():
+            sandbox_name = response['attributes']['sandbox_name']
+            id = response['id']
             for downloadable_file in ['evtx', 'pcap']:
-                if request.get_param(f'download_{downloadable_file}') and response.get(f'has_{downloadable_file}'):
+                if request.get_param(f'download_{downloadable_file}') and \
+                        response['attributes'].get(f'has_{downloadable_file}'):
+                    self.log.info(f"Downloading {downloadable_file} from {sandbox_name}")
                     # Download file and append for other services to analyze
-                    dest_path = os.path.join(self.working_directory, f"{response['id']}_{downloadable_file}")
+                    fn = f"{id}_{downloadable_file}"
+                    dest_path = os.path.join(self.working_directory, fn)
                     with open(dest_path, 'wb') as fh:
-                        fh.write(self.client.get(f'/file_behaviours/{response["id"]}/{downloadable_file}').read())
-                    request.add_extracted(
-                        dest_path, downloadable_file,
-                        description=f"{downloadable_file.upper()} from {response['sandbox_name']}")
+                        fh.write(self.client.get(f'/file_behaviours/{id}/{downloadable_file}').read())
+                    request.add_extracted(dest_path, fn,
+                                          description=f"{downloadable_file.upper()} from {sandbox_name}")
 
         report_type = response["type"]
         result_section = None
         if report_type == "file":
             result_section = parse_file_report(response, request.file_name, self.processor)
+            append_file_ontology(self.ontology, response)
 
             # Get as much information as we can about other related objects (entails more API requests)
             relationships_section = ResultSection('Related Objects', parent=result_section, auto_collapse=True)
-            if request.deep_scan:
+            if request.get_param('analyze_relationship') or True:
                 # Only concerned with relationships that contain content (minimize API calls needed)
                 for relationship in [k for k, v in response.get('relationships', {}).items() if v.get('data')]:
                     # Create a pretty title text for the section
@@ -132,6 +137,7 @@ class VirusTotal(ServiceBase):
             result_section = parse_network_report(response)
         elif report_type == "file_behaviour":
             result_section = parse_sandbox_report(response)
+            append_sandbox_ontology(self.ontology, response)
             download_sandbox_files()
 
         return result_section

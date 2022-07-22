@@ -25,8 +25,9 @@ Because the file leaves the Assemblyline infrastructure, if selected by the user
 |api_key|Individual VirusTotal API key|
 |dynamic_submit|Instructs the service to submit to VirusTotal if there is no existing report about the submission|
 |relationships|A list of comma-separated relationships that we want to get about the submission|
-|download_evtx|Have the service download EVTX from sandbox analyses. (`deep_scan` required)|
-|download_pcap|Have the service download EVTX from sandbox analyses. (`deep_scan` required)|
+|analyze_relationship|Perform analysis on the relationships to the submission|
+|download_evtx|Have the service download EVTX from sandbox analyses.|
+|download_pcap|Have the service download EVTX from sandbox analyses.|
 
-Note: For operations like `download_evtx` & `download_pcap`, the `deep_scan` flag is required as it entails more API calls to
+Note: For operations like `download_evtx` & `download_pcap`, the `analyze_relationship` flag is required as it entails more API calls to
 retrieve additional reports to get a full picture of the analysis done by VirusTotal.
