@@ -1,0 +1,90 @@
+name: VirusTotal
+version: $SERVICE_TAG
+description: >
+  This service checks (and optionally submits) files/URLs to VirusTotal for analysis.
+
+accepts: .*
+rejects: empty|metadata/.*
+
+stage: CORE
+category: External
+
+file_required: true
+timeout: 600
+disable_cache: false
+
+enabled: false
+is_external: true
+licence_count: 0
+
+uses_metadata: true
+privileged: true
+
+config:
+  api_key: ""
+  proxy: ""
+  av_config:
+    term_blocklist: ["Antiy-AVL", "APEX", "Jiangmin", "not-a-virus"] # Ignore results based on presence of term in signature combination
+    revised_sig_score_map: # Remap scoring based on signature combination
+      TACHYON.Suspicious/XOX.Obfus.Gen.2: 100
+      # The following should be added to the system-wide safelist
+      # Ikarus.Trojan-Downloader.MSWord.Agent: 0
+      # Ikarus.Trojan-Downloader.VBA.Agent: 0
+      # NANOAV.Exploit.Xml.CVE-2017-0199.equmby: 0
+      # TACHYON.Suspicious/XOX.Obfus.Gen.3: 0
+      # Vir.IT eXplorer.Office.VBA_Macro_Heur: 0
+      # Vir.IT eXplorer.W97M/Downloader.AB: 0
+    revised_kw_score_map: # Remap scoring based on keyword in an AV result
+      adware: 100
+
+submission_params:
+  - default: ""
+    name: api_key
+    type: str
+    value: ""
+  - default: false
+    name: dynamic_submit
+    type: bool
+    value: false
+  - default: "contacted_ips,contacted_domains,contacted_urls,behaviours"
+    name: relationships
+    type: str
+    value: "contacted_ips,contacted_domains,contacted_urls,behaviours"
+  - default: false
+    name: download_evtx
+    type: bool
+    value: false
+  - default: false
+    name: download_pcap
+    type: bool
+    value: false
+
+heuristics:
+  - heur_id: 1
+    name: File is infected
+    score: 1000
+    filetype: "*"
+    description: Antivirus detection found.
+
+  - heur_id: 2
+    name: Network IOC Detected
+    score: 50
+    filetype: "*"
+    description: Network IOC detected
+    max_score: 1000
+    signature_score_map:
+      low: 50
+      medium: 300
+      high: 1000
+
+  - heur_id: 1000
+    name: Capability Found
+    score: 100
+    filetype: "*"
+    description: VT has tagged sample with capabilities
+
+docker_config:
+  image: ${REGISTRY}cccs/assemblyline-service-virustotal:$SERVICE_TAG
+  cpu_cores: 0.25
+  ram_mb: 1024
+  allow_internet_access: true
