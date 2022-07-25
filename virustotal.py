@@ -98,7 +98,7 @@ class VirusTotal(ServiceBase):
 
             # Get as much information as we can about other related objects (entails more API requests)
             relationships_section = ResultSection('Related Objects', parent=result_section, auto_collapse=True)
-            if request.get_param('analyze_relationship') or True:
+            if request.get_param('analyze_relationship'):
                 # Only concerned with relationships that contain content (minimize API calls needed)
                 for relationship in [k for k, v in response.get('relationships', {}).items() if v.get('data')]:
                     # Create a pretty title text for the section
