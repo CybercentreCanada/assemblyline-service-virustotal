@@ -1,7 +1,8 @@
-import json
 import os
 import time
+
 from base64 import b64encode
+from copy import deepcopy
 from vt import Client, APIError
 
 from assemblyline_v4_service.common.base import ServiceBase
@@ -15,6 +16,17 @@ from assemblyline_v4_service.common.virustotal.behaviour import v3 as parse_sand
 
 
 MAX_RETRY = 3
+
+
+def get_tag_values(section: ResultSection):
+    values = []
+    for v in section.tags.values():
+        values.extend(v)
+
+    for s in section.subsections:
+        values.extend(get_tag_values(s))
+
+    return values
 
 
 class VirusTotal(ServiceBase):
@@ -66,6 +78,25 @@ class VirusTotal(ServiceBase):
                                         dynamic_submit=request.get_param('dynamic_submit'))
 
         result_section = self.analyze_response(response, request)
+
+        # Add tagging for dynamic IOCs into URL report sections
+        for section in result_section.subsections:
+            if section.title_text == 'Related Objects':
+                behavior_section = [relation_section for relation_section in section.subsections
+                                    if relation_section.title_text == "Behaviours"]
+                if not behavior_section:
+                    break
+                dynamic_iocs = get_tag_values(behavior_section[0])
+                for relation_section in section.subsections:
+                    if relation_section.title_text == "Behaviours":
+                        continue
+
+                    for subsection in relation_section.subsections:
+                        tags = deepcopy(subsection.tags)
+                        for k, v in tags.items():
+                            [subsection.add_tag(k.replace('static', 'dynamic'), ioc)
+                             for ioc in v if ioc in dynamic_iocs]
+
         if result_section:
             result.add_section(result_section)
 
