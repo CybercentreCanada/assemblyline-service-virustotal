@@ -79,25 +79,26 @@ class VirusTotal(ServiceBase):
 
         result_section = self.analyze_response(response, request)
 
-        # Add tagging for dynamic IOCs into URL report sections
-        for section in result_section.subsections:
-            if section.title_text == 'Related Objects':
-                behavior_section = [relation_section for relation_section in section.subsections
-                                    if relation_section.title_text == "Behaviours"]
-                if not behavior_section:
-                    break
-                dynamic_iocs = get_tag_values(behavior_section[0])
-                for relation_section in section.subsections:
-                    if relation_section.title_text == "Behaviours":
-                        continue
-
-                    for subsection in relation_section.subsections:
-                        tags = deepcopy(subsection.tags)
-                        for k, v in tags.items():
-                            [subsection.add_tag(k.replace('static', 'dynamic'), ioc)
-                             for ioc in v if ioc in dynamic_iocs]
-
         if result_section:
+            # Add tagging for dynamic IOCs into URL report sections
+            if request.get_param('analyze_relationship'):
+                for section in result_section.subsections:
+                    if section.title_text == 'Related Objects':
+                        behavior_section = [relation_section for relation_section in section.subsections
+                                            if relation_section.title_text == "Behaviours"]
+                        if not behavior_section:
+                            break
+                        dynamic_iocs = get_tag_values(behavior_section[0])
+                        for relation_section in section.subsections:
+                            if relation_section.title_text == "Behaviours":
+                                continue
+
+                            for subsection in relation_section.subsections:
+                                tags = deepcopy(subsection.tags)
+                                for k, v in tags.items():
+                                    [subsection.add_tag(k.replace('static', 'dynamic'), ioc)
+                                     for ioc in v if ioc in dynamic_iocs]
+
             result.add_section(result_section)
 
         request.result = result
