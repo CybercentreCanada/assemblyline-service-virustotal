@@ -8,11 +8,11 @@ from vt import Client, APIError
 from assemblyline_v4_service.common.base import ServiceBase
 from assemblyline_v4_service.common.request import ServiceRequest
 from assemblyline_v4_service.common.result import Result, ResultSection, BODY_FORMAT
-from assemblyline_v4_service.common.virustotal.common.processing import AVResultsProcessor
-from assemblyline_v4_service.common.virustotal.file import v3 as parse_file_report, attach_ontology as append_file_ontology
-from assemblyline_v4_service.common.virustotal.url import v3 as parse_url_report
-from assemblyline_v4_service.common.virustotal.ip_domain import v3 as parse_network_report
-from assemblyline_v4_service.common.virustotal.behaviour import v3 as parse_sandbox_report, attach_ontology as append_sandbox_ontology
+from reports.common.processing import AVResultsProcessor
+from reports.file import v3 as parse_file_report, attach_ontology as append_file_ontology
+from reports.url import v3 as parse_url_report
+from reports.ip_domain import v3 as parse_network_report
+from reports.behaviour import v3 as parse_sandbox_report, attach_ontology as append_sandbox_ontology
 
 
 MAX_RETRY = 3
