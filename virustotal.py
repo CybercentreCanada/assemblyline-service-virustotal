@@ -42,7 +42,8 @@ class VirusTotal(ServiceBase):
             self.config["av_config"]['term_blocklist'],
             self.config["av_config"]['revised_sig_score_map'],
             self.config["av_config"]['revised_kw_score_map'],
-            sig_safelist
+            sig_safelist,
+            self.config["av_config"]['specific_AVs']
         )
 
     def start(self):
