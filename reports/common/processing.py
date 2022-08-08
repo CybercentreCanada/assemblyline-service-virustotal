@@ -53,7 +53,7 @@ class AVResultsProcessor():
                 elif any(kw.lower() in sig.lower() for kw in self.revised_kw_score_map):
                     # Find the kw and apply score
                     heur.add_signature_id(sig, max([self.revised_kw_score_map[kw]
-                                                    for kw in self.revised_kw_score_map if kw in sig.lower()]))
+                                                    for kw in self.revised_kw_score_map if kw.lower() in sig.lower()]))
 
                 else:
                     heur.add_signature_id(sig)
