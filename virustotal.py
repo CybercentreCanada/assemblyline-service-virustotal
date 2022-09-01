@@ -54,7 +54,7 @@ class VirusTotal(ServiceBase):
         try:
             # Submitter's API key should be used first, global is a fallback if configured
             self.client = Client(apikey=request.get_param("api_key") or self.config.get("api_key"),
-                                 proxy=self.config.get('proxy') or None)
+                                 proxy=self.config.get('proxy') or None, host=self.config.get('host') or None)
         except ValueError as e:
             self.log.error("No API key found for VirusTotal")
             raise e

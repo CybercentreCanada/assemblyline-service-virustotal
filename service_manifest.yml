@@ -22,6 +22,7 @@ privileged: true
 
 config:
   api_key: ""
+  host: ""
   proxy: ""
   av_config:
     term_blocklist: ["Antiy-AVL", "APEX", "Jiangmin", "not-a-virus"] # Ignore results based on presence of term in signature combination
