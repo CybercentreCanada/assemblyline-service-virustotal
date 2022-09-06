@@ -89,12 +89,17 @@ def pe_section(info={}, exiftool={}, signature={}):
 def yara_section(rule_matches=[]):
     yara_section = ResultSection("Crowdsourced YARA")
     for rule in rule_matches:
+        section_body = {
+            'ID': rule['ruleset_id'],
+            'Name': rule['rule_name'],
+            'Source': rule['source']
+        }
+
+        if rule.get('author'):
+            section_body['Author'] = rule['author']
+        if rule.get('description'):
+            section_body['Description'] = rule['description']
+
         yara_section.add_subsection(ResultSection(title_text=f"[{rule['ruleset_name'].upper()}] {rule['rule_name']}",
-                                                  body=json.dumps({
-                                                      'Author': rule['author'],
-                                                      'Description': rule.get('description', ''),
-                                                      'ID': rule['ruleset_id'],
-                                                      'Name': rule['rule_name'],
-                                                      'Source': rule['source'],
-                                                  }), body_format=BODY_FORMAT.KEY_VALUE))
+                                                  body=json.dumps(section_body), body_format=BODY_FORMAT.KEY_VALUE))
     return yara_section
