@@ -16,6 +16,7 @@ Because the file leaves the Assemblyline infrastructure, if selected by the user
 |Name|Description|
 |:---:|:---|
 |api_key|Global VirusTotal API key for the system to use if the submitter doesn't provide their own|
+|host|VirusTotal host defaults to external `https://www.virustotal.com` but can be specified for testing or internal hosting.|
 |proxy|Proxy to connect to VirusTotal with|
 |av_config|Configuration block that tells the service to ignore/remap certain AV verdicts from the File Report. See [Service Manifest](./service_manifest.yml) for more details.|
 
