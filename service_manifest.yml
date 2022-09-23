@@ -24,6 +24,7 @@ config:
   api_key: ""
   host: ""
   proxy: ""
+  allow_dynamic_submit: true
   av_config:
     term_blocklist: ["Antiy-AVL", "APEX", "Jiangmin", "not-a-virus"] # Ignore results based on presence of term in signature combination
     revised_sig_score_map: # Remap scoring based on signature combination
@@ -37,7 +38,7 @@ config:
       # Vir.IT eXplorer.W97M/Downloader.AB: 0
     revised_kw_score_map: # Remap scoring based on keyword in an AV result
       adware: 100
-    specific_AVs: []  # Used to target certain AV results only, ignore others
+    specific_AVs: [] # Used to target certain AV results only, ignore others
 
 submission_params:
   - default: ""

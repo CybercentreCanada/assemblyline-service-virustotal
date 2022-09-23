@@ -34,6 +34,7 @@ class VirusTotal(ServiceBase):
         super(VirusTotal, self).__init__(config)
         self.client = None
         self.safelist_interface = self.get_api_interface().get_safelist
+        self.allow_dynamic_resubmit = self.config.get('allow_dynamic_resubmit')
 
         sig_safelist = []
         [sig_safelist.extend(match_list)
@@ -61,12 +62,13 @@ class VirusTotal(ServiceBase):
 
         result = Result()
         scan_url = bool(request.task.metadata.get('submitted_url', None) and request.task.depth == 0)
+        dynamic_submit = request.get_param('dynamic_submit') and self.allow_dynamic_resubmit
         response = None
         if scan_url:
             submitted_url = request.task.metadata['submitted_url']
             response = self.common_scan(type="url", sample=submitted_url,
                                         id=b64encode(submitted_url.encode()).decode(),
-                                        dynamic_submit=request.get_param('dynamic_submit'))
+                                        dynamic_submit=dynamic_submit)
         else:
             relationships = request.get_param('relationships')
             if (request.get_param('download_evtx') or request.get_param('download_pcap')) and 'behaviours' not in relationships:
@@ -76,7 +78,7 @@ class VirusTotal(ServiceBase):
             response = self.common_scan(type="file", sample=open(request.file_path, 'rb'),
                                         # ID with relationship params
                                         id=f"{request.sha256}?relationships={relationships}",
-                                        dynamic_submit=request.get_param('dynamic_submit'))
+                                        dynamic_submit=dynamic_submit)
 
         result_section = self.analyze_response(response, request)
 
