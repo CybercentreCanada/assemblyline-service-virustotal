@@ -50,6 +50,10 @@ submission_params:
     type: bool
     value: false
   - default: false
+    name: ignore_submitted_url
+    type: bool
+    value: false
+  - default: false
     name: analyze_relationship
     type: bool
     value: false

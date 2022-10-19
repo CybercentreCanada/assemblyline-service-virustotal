@@ -64,7 +64,7 @@ class VirusTotal(ServiceBase):
         scan_url = bool(request.task.metadata.get('submitted_url', None) and request.task.depth == 0)
         dynamic_submit = request.get_param('dynamic_submit') and self.allow_dynamic_resubmit
         response = None
-        if scan_url:
+        if scan_url and not request.get_param('ignore_submitted_url'):
             submitted_url = request.task.metadata['submitted_url']
             response = self.common_scan(type="url", sample=submitted_url,
                                         id=b64encode(submitted_url.encode()).decode(),
