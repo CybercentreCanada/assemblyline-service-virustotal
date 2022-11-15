@@ -1,9 +1,11 @@
-from assemblyline.odm.models.ontology.results import Sandbox, Process
-from assemblyline_v4_service.common.dynamic_service_helper import SandboxOntology
+from assemblyline.common.isotime import LOCAL_FMT
+from assemblyline.odm.models.ontology.results import Sandbox, Process as ProcessModel
+from assemblyline_v4_service.common.dynamic_service_helper import OntologyResults, Process
 from assemblyline_v4_service.common.ontology_helper import OntologyHelper
 from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection, Heuristic
-from collections import defaultdict
 
+from collections import defaultdict
+from datetime import datetime
 import json
 
 SANDBOX_SIGNATURES = {
@@ -60,8 +62,7 @@ SANDBOX_SIGNATURES_REVERSE_LOOKUP = {sig_item: heuristic for heuristic,
                                      signatures in SANDBOX_SIGNATURES.items() for sig_item in signatures}
 
 
-def get_events(so: SandboxOntology, process_tree=[], parent=None, execution_time=0):
-    events = []
+def get_events(so: OntologyResults, process_tree=[], parent=None, execution_time=0):
     for process in process_tree:
         ppid = parent.pid if parent else None
         pid = process['process_id']
@@ -69,13 +70,28 @@ def get_events(so: SandboxOntology, process_tree=[], parent=None, execution_time
         image = f'{command_split[0]} {command_split[1]}' if 'Program Files' in process['name'] else command_split[0]
         command = process['name']
         execution_time = execution_time+process.get('time_offset', 0)
+        p_oid = ProcessModel.get_oid(
+            {
+                "pid": pid,
+                "ppid": ppid,
+                "image": image,
+                "command_line": command,
+            }
+        )
+        p_objectid = so.create_objectid(
+            tag=Process.create_objectid_tag(image),
+            ontology_id=p_oid,
+        )
+        p_objectid.assign_guid()
         p = so.create_process(
-            pobjectid=None,
+            objectid=p_objectid,
             ppid=ppid,
             pid=pid,
             image=image,
             command_line=command,
-            start_time=execution_time
+            start_time=datetime.fromtimestamp(execution_time).strftime(
+                            LOCAL_FMT
+                        )
         )
         so.add_process(p)
         get_events(so, process.get('children', []), parent=p, execution_time=execution_time)
@@ -83,7 +99,7 @@ def get_events(so: SandboxOntology, process_tree=[], parent=None, execution_time
 
 # Modeling output after Cuckoo service
 def v3(doc: dict):
-    def get_process_tree(so: SandboxOntology, processes_tree=[], parent_section=None, execution_time=0):
+    def get_process_tree(so: OntologyResults, processes_tree=[], parent_section=None, execution_time=0):
         get_events(so, processes_tree, execution_time=execution_time)
 
         if not so.get_events():
@@ -172,7 +188,7 @@ def v3(doc: dict):
     sandbox_section = ResultSection(f"Sandbox: {attributes['sandbox_name']}")
     # get_signatures(attributes.get('tags', []) + attributes.get('calls_highlighted', []),
     #             parent_section=sandbox_section)
-    so = SandboxOntology()
+    so = OntologyResults(service_name="VirusTotal")
     get_process_tree(so, attributes.get('processes_tree', []), parent_section=sandbox_section,
                      execution_time=attributes['analysis_date'])
     get_network_activity(attributes.get('dns_lookups', []), attributes.get('http_conversations', []),
@@ -195,7 +211,7 @@ def attach_ontology(ontology_helper: OntologyHelper, doc: dict):
         'session': ontology_id
     }
     session_id = ontology_helper.add_result_part(Sandbox, so_ontology)
-    so = SandboxOntology()
+    so = OntologyResults(service_name="VirusTotal")
     get_events(so, attributes.get('processes_tree', []), execution_time=attributes['analysis_date'])
     for process_event in so.get_events():
         proc = process_event.as_primitives()
