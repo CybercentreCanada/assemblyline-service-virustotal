@@ -83,6 +83,9 @@ def attach_ontology(ontology_helper: None, doc: dict):
         result = details['result']
         if result == "timeout":
             result = None
+        elif details['category'] == 'timeout':
+            # Not reporting on timeouts
+            continue
         details['virus_name'] = result or "undetected"
         details['engine_definition_version'] = details['engine_update']
         # Pop irrelevant fields to ontology
