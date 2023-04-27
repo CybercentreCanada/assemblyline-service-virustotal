@@ -59,7 +59,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
                 info_section.add_subsection(info.yara_section(v))
 
             elif 'crowdsourced_ai_results' in k:
-                   [ResultSection(title_text=f'Crowdsourced AI Analysis - {s["source"]}', body=s['analysis'],
+                   [ResultSection(title_text=f'Code Insight by {s["source"]}', body=s['analysis'],
                                   heuristic=Heuristic(1001), auto_collapse=True, parent=info_section) for s in v]
         if info_section.subsections:
             main_section.add_subsection(info_section)
