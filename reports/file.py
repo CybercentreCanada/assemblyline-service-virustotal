@@ -43,7 +43,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
     # TODO Display info sections results in same template as relevant services (ie. ELF)
 
     # *_info Section
-    info_found = any("_info" in k for k in attributes.keys()) or attributes.get('crowdsourced_yara_results')
+    info_found = any("_info" in k for k in attributes.keys()) or any([attributes.get(x) for x in ['crowdsourced_yara_results', 'crowdsourced_ai_results']])
     if info_found:
         info_section = ResultSection('Info Section', auto_collapse=True)
         for k, v in attributes.items():
@@ -58,6 +58,9 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
             elif 'crowdsourced_yara_results' in k:
                 info_section.add_subsection(info.yara_section(v))
 
+            elif 'crowdsourced_ai_results' in k:
+                   [ResultSection(title_text=f'Code Insight by {s["source"]}', body=s['analysis'],
+                                  heuristic=Heuristic(1001), auto_collapse=True, parent=info_section) for s in v]
         if info_section.subsections:
             main_section.add_subsection(info_section)
 
