@@ -94,6 +94,12 @@ heuristics:
     filetype: "*"
     description: VT has tagged sample with capabilities
 
+  - heur_id: 1001
+    name: AI Analysis
+    score: 0
+    filetype: "*"
+    description: "VT has crowdsourced AI analysis of the file"
+
 docker_config:
   image: ${REGISTRY}cccs/assemblyline-service-virustotal:$SERVICE_TAG
   cpu_cores: 0.25
