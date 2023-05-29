@@ -1,11 +1,10 @@
 import json
 import time
-
 from collections import defaultdict
-from typing import List, Dict, Any
+from typing import Any, Dict, List
 
 from assemblyline.common import forge
-from assemblyline_v4_service.common.result import ResultSection, Heuristic, BODY_FORMAT
+from assemblyline_v4_service.common.result import BODY_FORMAT, Heuristic, ResultSection
 
 Classification = forge.get_classification()
 

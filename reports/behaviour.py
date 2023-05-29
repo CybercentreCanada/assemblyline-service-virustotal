@@ -1,12 +1,13 @@
-from assemblyline.common.isotime import LOCAL_FMT
-from assemblyline.odm.models.ontology.results import Sandbox, Process as ProcessModel
-from assemblyline_v4_service.common.dynamic_service_helper import OntologyResults, Process
-from assemblyline_v4_service.common.ontology_helper import OntologyHelper
-from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection, Heuristic
-
+import json
 from collections import defaultdict
 from datetime import datetime
-import json
+
+from assemblyline.common.isotime import LOCAL_FMT
+from assemblyline.odm.models.ontology.results import Process as ProcessModel
+from assemblyline.odm.models.ontology.results import Sandbox
+from assemblyline_service_utilities.common.dynamic_service_helper import OntologyResults, Process
+from assemblyline_v4_service.common.ontology_helper import OntologyHelper
+from assemblyline_v4_service.common.result import BODY_FORMAT, Heuristic, ResultSection
 
 SANDBOX_SIGNATURES = {
     'Adware': [],
