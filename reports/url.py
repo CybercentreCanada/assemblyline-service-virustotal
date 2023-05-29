@@ -1,9 +1,9 @@
 import json
-from assemblyline.common import forge
-from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection
-from assemblyline_v4_service.common.ontology_helper import OntologyHelper
-from reports.common.processing import format_time_from_epoch
 
+from assemblyline.common import forge
+from assemblyline_v4_service.common.ontology_helper import OntologyHelper
+from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection
+from reports.common.processing import format_time_from_epoch
 
 Classification = forge.get_classification()
 

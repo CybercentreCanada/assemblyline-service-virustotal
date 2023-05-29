@@ -1,5 +1,6 @@
 import json
 import time
+
 from assemblyline.common import forge
 from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection
 from reports.common.processing import format_time_from_epoch

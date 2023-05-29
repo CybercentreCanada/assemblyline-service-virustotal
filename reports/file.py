@@ -2,11 +2,10 @@ import json
 
 from assemblyline.common import forge
 from assemblyline.odm.models.ontology.results import Antivirus
-from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection, Heuristic
+from assemblyline_v4_service.common.result import BODY_FORMAT, Heuristic, ResultSection
 from reports.common import info
 from reports.common.configs import CAPABILITY_LOOKUP
-from reports.common.processing import format_time_from_epoch
-from reports.common.processing import AVResultsProcessor
+from reports.common.processing import AVResultsProcessor, format_time_from_epoch
 
 Classification = forge.get_classification()
 

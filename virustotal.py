@@ -1,19 +1,19 @@
 import os
 import time
-
 from base64 import b64encode
 from copy import deepcopy
-from vt import Client, APIError
 
 from assemblyline_v4_service.common.base import ServiceBase
 from assemblyline_v4_service.common.request import ServiceRequest
-from assemblyline_v4_service.common.result import Result, ResultSection, BODY_FORMAT
+from assemblyline_v4_service.common.result import BODY_FORMAT, Result, ResultSection
+from reports.behaviour import attach_ontology as append_sandbox_ontology
+from reports.behaviour import v3 as parse_sandbox_report
 from reports.common.processing import AVResultsProcessor
-from reports.file import v3 as parse_file_report, attach_ontology as append_file_ontology
-from reports.url import v3 as parse_url_report
+from reports.file import attach_ontology as append_file_ontology
+from reports.file import v3 as parse_file_report
 from reports.ip_domain import v3 as parse_network_report
-from reports.behaviour import v3 as parse_sandbox_report, attach_ontology as append_sandbox_ontology
-
+from reports.url import v3 as parse_url_report
+from vt import APIError, Client
 
 MAX_RETRY = 3
 
