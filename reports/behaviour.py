@@ -2,7 +2,7 @@ import json
 from collections import defaultdict
 from datetime import datetime
 
-from assemblyline.common.isotime import LOCAL_FMT
+from assemblyline.common.isotime import epoch_to_local_with_ms
 from assemblyline.odm.models.ontology.results import Process as ProcessModel
 from assemblyline.odm.models.ontology.results import Sandbox
 from assemblyline_service_utilities.common.dynamic_service_helper import OntologyResults, Process
@@ -90,9 +90,7 @@ def get_events(so: OntologyResults, process_tree=[], parent=None, execution_time
             pid=pid,
             image=image,
             command_line=command,
-            start_time=datetime.fromtimestamp(execution_time).strftime(
-                            LOCAL_FMT
-                        )
+            start_time=epoch_to_local_with_ms(execution_time)
         )
         so.add_process(p)
         get_events(so, process.get('children', []), parent=p, execution_time=execution_time)
