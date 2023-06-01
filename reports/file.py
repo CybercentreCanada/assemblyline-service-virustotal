@@ -39,10 +39,9 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
         ResultSection("Submitter details", body=json.dumps(submitter), body_format=BODY_FORMAT.KEY_VALUE,
                       classification=Classification.RESTRICTED, parent=main_section)
 
-    # TODO Display info sections results in same template as relevant services (ie. ELF)
-
     # *_info Section
-    info_found = any("_info" in k for k in attributes.keys()) or any([attributes.get(x) for x in ['crowdsourced_yara_results', 'crowdsourced_ai_results']])
+    info_found = any("_info" in k for k in attributes.keys()) or any(
+        [attributes.get(x) for x in ['crowdsourced_yara_results', 'crowdsourced_ai_results']])
     if info_found:
         info_section = ResultSection('Info Section', auto_collapse=True)
         for k, v in attributes.items():
@@ -58,8 +57,8 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
                 info_section.add_subsection(info.yara_section(v))
 
             elif 'crowdsourced_ai_results' in k:
-                   [ResultSection(title_text=f'Code Insight by {s["source"]}', body=s['analysis'],
-                                  heuristic=Heuristic(1001), auto_collapse=True, parent=info_section) for s in v]
+                [ResultSection(title_text=f'Code Insight by {s["source"]}', body=s['analysis'],
+                               heuristic=Heuristic(1001), auto_collapse=True, parent=info_section) for s in v]
         if info_section.subsections:
             main_section.add_subsection(info_section)
 
@@ -85,11 +84,14 @@ def attach_ontology(ontology_helper: None, doc: dict):
         result = details['result']
         if result == "timeout":
             result = None
-        elif details['category'] == 'timeout':
+        elif details['category'] in ['timeout', 'confirmed-timeout']:
             # Not reporting on timeouts
             continue
         details['virus_name'] = result or "undetected"
         details['engine_definition_version'] = details['engine_update']
+        if details.get('engine_version') == "":
+            # Invalid engine_version
+            details.pop('engine_version')
         # Pop irrelevant fields to ontology
         [details.pop(x, None) for x in ['result', 'method', 'engine_update']]
         ontology_helper.add_result_part(Antivirus, details)
