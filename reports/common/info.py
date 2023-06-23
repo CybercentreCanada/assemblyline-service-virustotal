@@ -68,8 +68,14 @@ def pe_section(info={}, exiftool={}, signature={}):
         debug = ResultSection("PE: DEBUG", parent=main_section)
         debug.add_line(f"Time Date Stamp: {info['debug'][0]['timestamp']}")
         if info['debug'][0].get("codeview", None):
-            debug.add_line(f"PDB: {info['debug'][0]['codeview']['name']}")
-            debug.add_tag("file.pe.pdb_filename", info['debug'][0]['codeview']['name'])
+            name = info['debug'][0]['codeview'].get('name')
+            guid = info['debug'][0]['codeview'].get('guid')
+            if name:
+                debug.add_line(f"PDB: {name}")
+                debug.add_tag("file.pe.pdb_filename", name)
+            if guid:
+                debug.add_line(f"GUID: {guid}")
+                debug.add_tag('file.pe.debug.guid', guid)
 
     # IMPORTS
     if info.get("import_list", None):
