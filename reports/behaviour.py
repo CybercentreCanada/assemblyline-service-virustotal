@@ -118,6 +118,8 @@ def v3(doc: dict):
 
             # DNS Lookup Table
             for record in dns_lookups:
+                if not record.get('hostname'):
+                    continue
                 domain = record['hostname']
                 resolved_ips = record.get('resolved_ips', [])
                 lookup_table.append({
@@ -165,7 +167,7 @@ def v3(doc: dict):
             for http in http_conv:
                 http_conversations.append({
                     'protocol':  http['url'].split('://')[0],
-                    'request': f"{http['request_method']} {http['url']}"
+                    'request': f"{http.get('request_method', 'GET')} {http['url']}"
                 })
                 tags.append(http['url'])
 
@@ -211,13 +213,18 @@ def attach_ontology(ontology_helper: OntologyHelper, doc: dict):
     }
     session_id = ontology_helper.add_result_part(Sandbox, so_ontology)
     so = OntologyResults(service_name="VirusTotal")
-    get_events(so, attributes.get('processes_tree', []), execution_time=attributes['analysis_date'])
-    for process_event in so.get_events():
-        proc = process_event.as_primitives()
-        proc['objectid']['session'] = session_id
+    try:
+        get_events(so, attributes.get('processes_tree', []), execution_time=attributes['analysis_date'])
+        for process_event in so.get_events():
+            proc = process_event.as_primitives()
+            proc['objectid']['session'] = session_id
 
-        if proc['end_time'] == float('inf'):
-            proc['end_time'] = None
-        ontology_helper.add_result_part(Process, proc)
+            if proc['end_time'] == float('inf'):
+                proc['end_time'] = None
+            ontology_helper.add_result_part(Process, proc)
+    except ValueError as e:
+        # VirusTotal didn't provide enough information to create a unique identifier
+        if  "The objectid needs its required arguments" in str(e):
+            pass
 
     return
