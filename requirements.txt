@@ -1,2 +1,2 @@
 assemblyline-service-utilities
-vt-py
+vt-py==0.17.5
