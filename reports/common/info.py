@@ -14,10 +14,10 @@ def pdf_section(info={}, exiftool={}):
     if exiftool:
         if exiftool.get("CreateDate", None):
             pdf_properties.add_line(f"CreationDate: {exiftool['CreateDate']}")
-            pdf_properties.add_tag("file.date.creation", exiftool['CreateDate'])
+            pdf_properties.add_tag("file.date.creation", exiftool["CreateDate"])
         if exiftool.get("ModifyDate", None):
             pdf_properties.add_line(f"ModifyDate: {exiftool['ModifyDate']}")
-            pdf_properties.add_tag("file.pdf.date.modified", exiftool['ModifyDate'])
+            pdf_properties.add_tag("file.pdf.date.modified", exiftool["ModifyDate"])
 
     return main_section
 
@@ -29,13 +29,18 @@ def pe_section(info={}, exiftool={}, signature={}):
     header_body = {}
     header_tags = {}
     if signature.get("original name"):
-        header_body["Original filename"] = signature['original name']
-        header_tags["file.pe.versions.filename"] = signature['original name']
+        header_body["Original filename"] = signature["original name"]
+        header_tags["file.pe.versions.filename"] = signature["original name"]
     if signature.get("description"):
-        header_body["Description"] = signature['description']
-        header_tags['file.pe.versions.description'] = signature['description']
-    header = ResultSection("PE: HEADER", body=json.dumps(header_body),
-                           body_format=BODY_FORMAT.KEY_VALUE, tags=header_tags, parent=main_section)
+        header_body["Description"] = signature["description"]
+        header_tags["file.pe.versions.description"] = signature["description"]
+    header = ResultSection(
+        "PE: HEADER",
+        body=json.dumps(header_body),
+        body_format=BODY_FORMAT.KEY_VALUE,
+        tags=header_tags,
+        parent=main_section,
+    )
 
     #  HEADER INFO
     if exiftool:
@@ -44,49 +49,53 @@ def pe_section(info={}, exiftool={}, signature={}):
         header_info.add_line(f"Linker Version: {exiftool['LinkerVersion']}")
         header_info.add_line(f"OS Version: {exiftool['OSVersion']}")
         header_info.add_line(f"Machine Type: {exiftool['MachineType']}")
-        if info.get('timestamp', None):
+        if info.get("timestamp", None):
             header_info.add_line(f"Time Date Stamp: {exiftool['TimeStamp']}({info['timestamp']})")
-            header_info.add_tag('file.pe.linker.timestamp', info['timestamp'])
+            header_info.add_tag("file.pe.linker.timestamp", info["timestamp"])
         else:
             header_info.add_line(f"Time Date Stamp: {exiftool['TimeStamp']}")
 
     #  RICH HEADER INFO
     if info.get("compiler_product_versions", None):
         rich_header_info = ResultSection("[RICH HEADER INFO]", parent=header)
-        rich_header_info.add_lines(info['compiler_product_versions'])
+        rich_header_info.add_lines(info["compiler_product_versions"])
 
     #  SECTIONS
-    if info.get('sections', None):
+    if info.get("sections", None):
         sections = ResultSection("[SECTIONS]", parent=header)
-        for s in info['sections']:
-            ResultSection(f"{s['name']} - Virtual: {hex(s['virtual_address'])}({hex(s['virtual_size'])} bytes) - "
-                          f"Physical: ({hex(s['raw_size'])} bytes) - hash: {s['md5']} - entropy: {s['entropy']}",
-                          tags={"file.pe.sections.name": [s['name']], "file.pe.sections.hash": [s['md5']]}, parent=sections)
+        for s in info["sections"]:
+            ResultSection(
+                f"{s['name']} - Virtual: {hex(s['virtual_address'])}({hex(s['virtual_size'])} bytes) - "
+                f"Physical: ({hex(s['raw_size'])} bytes) - hash: {s['md5']} - entropy: {s['entropy']}",
+                tags={"file.pe.sections.name": [s["name"]], "file.pe.sections.hash": [s["md5"]]},
+                parent=sections,
+            )
 
     # DEBUG
-    if info.get('debug', None):
+    if info.get("debug", None):
         debug = ResultSection("PE: DEBUG", parent=main_section)
         debug.add_line(f"Time Date Stamp: {info['debug'][0]['timestamp']}")
-        if info['debug'][0].get("codeview", None):
-            name = info['debug'][0]['codeview'].get('name')
-            guid = info['debug'][0]['codeview'].get('guid')
+        if info["debug"][0].get("codeview", None):
+            name = info["debug"][0]["codeview"].get("name")
+            guid = info["debug"][0]["codeview"].get("guid")
             if name:
                 debug.add_line(f"PDB: {name}")
                 debug.add_tag("file.pe.pdb_filename", name)
             if guid:
                 debug.add_line(f"GUID: {guid}")
-                debug.add_tag('file.pe.debug.guid', guid)
+                debug.add_tag("file.pe.debug.guid", guid)
 
     # IMPORTS
     if info.get("import_list", None):
         imports = ResultSection("PE: IMPORTS", parent=main_section)
-        for imp in info['import_list']:
-            imports.add_subsection(ResultSection(f"[{imp['library_name']}]", body=", ".join(imp['imported_functions'])))
+        for imp in info["import_list"]:
+            imports.add_subsection(ResultSection(f"[{imp['library_name']}]", body=", ".join(imp["imported_functions"])))
 
     # RESOURCES-VersionInfo
     if signature:
-        ResultSection("PE: RESOURCES", body=json.dumps(signature),
-                      body_format=BODY_FORMAT.KEY_VALUE, parent=main_section)
+        ResultSection(
+            "PE: RESOURCES", body=json.dumps(signature), body_format=BODY_FORMAT.KEY_VALUE, parent=main_section
+        )
 
     return main_section
 
@@ -95,17 +104,18 @@ def pe_section(info={}, exiftool={}, signature={}):
 def yara_section(rule_matches=[]):
     yara_section = ResultSection("Crowdsourced YARA")
     for rule in rule_matches:
-        section_body = {
-            'ID': rule['ruleset_id'],
-            'Name': rule['rule_name'],
-            'Source': rule['source']
-        }
+        section_body = {"ID": rule["ruleset_id"], "Name": rule["rule_name"], "Source": rule["source"]}
 
-        if rule.get('author'):
-            section_body['Author'] = rule['author']
-        if rule.get('description'):
-            section_body['Description'] = rule['description']
+        if rule.get("author"):
+            section_body["Author"] = rule["author"]
+        if rule.get("description"):
+            section_body["Description"] = rule["description"]
 
-        yara_section.add_subsection(ResultSection(title_text=f"[{rule['ruleset_name'].upper()}] {rule['rule_name']}",
-                                                  body=json.dumps(section_body), body_format=BODY_FORMAT.KEY_VALUE))
+        yara_section.add_subsection(
+            ResultSection(
+                title_text=f"[{rule['ruleset_name'].upper()}] {rule['rule_name']}",
+                body=json.dumps(section_body),
+                body_format=BODY_FORMAT.KEY_VALUE,
+            )
+        )
     return yara_section
