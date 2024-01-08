@@ -72,5 +72,5 @@ CAPABILITY_LOOKUP = {
     "win_mutex": "T1106",
     "win_private_profile": "T1098",
     "win_registry": "T1112",
-    "win_token": "T1134"
+    "win_token": "T1134",
 }
