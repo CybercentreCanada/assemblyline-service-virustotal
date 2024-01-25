@@ -64,10 +64,14 @@ def pe_section(info={}, exiftool={}, signature={}):
     if info.get("sections", None):
         sections = ResultSection("[SECTIONS]", parent=header)
         for s in info["sections"]:
+            section_name = s.get('name', '')
+            tags = {"file.pe.sections.hash": [s["md5"]]}
+            if section_name:
+                tags["file.pe.sections.name"] = section_name
             ResultSection(
-                f"{s['name']} - Virtual: {hex(s['virtual_address'])}({hex(s['virtual_size'])} bytes) - "
+                f"{section_name} - Virtual: {hex(s['virtual_address'])}({hex(s['virtual_size'])} bytes) - "
                 f"Physical: ({hex(s['raw_size'])} bytes) - hash: {s['md5']} - entropy: {s['entropy']}",
-                tags={"file.pe.sections.name": [s["name"]], "file.pe.sections.hash": [s["md5"]]},
+                tags=tags,
                 parent=sections,
             )
 
