@@ -38,12 +38,14 @@ def v3(doc: dict):
     categories = [v for k, v in attributes.get("categories", {}).items()]
     body_dict = {
         "Categories": ", ".join(categories),
-        "Scan Date": format_time_from_epoch(attributes["last_analysis_date"]),
         "First Seen": format_time_from_epoch(attributes["first_submission_date"]),
         "Last Seen": format_time_from_epoch(attributes["last_submission_date"]),
         "Permalink": f"https://www.virustotal.com/gui/url/{doc['id']}",
         "Reputation": attributes["reputation"],
     }
+    if attributes.get("last_analysis_date"):
+        body_dict["Scan Date"] = format_time_from_epoch(attributes["last_analysis_date"])
+
     if hit_list:
         body_dict["Detected By"] = ", ".join(hit_list)
     elif und_list:
