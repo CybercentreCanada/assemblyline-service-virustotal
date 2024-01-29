@@ -30,10 +30,10 @@ def pe_section(info={}, exiftool={}, signature={}):
     header_tags = {}
     if signature.get("original name"):
         header_body["Original filename"] = signature["original name"]
-        header_tags["file.pe.versions.filename"] = signature["original name"]
+        header_tags["file.pe.versions.filename"] = [signature["original name"]]
     if signature.get("description"):
         header_body["Description"] = signature["description"]
-        header_tags["file.pe.versions.description"] = signature["description"]
+        header_tags["file.pe.versions.description"] = [signature["description"]]
     header = ResultSection(
         "PE: HEADER",
         body=json.dumps(header_body),
@@ -64,10 +64,10 @@ def pe_section(info={}, exiftool={}, signature={}):
     if info.get("sections", None):
         sections = ResultSection("[SECTIONS]", parent=header)
         for s in info["sections"]:
-            section_name = s.get('name', '')
+            section_name = s.get("name", "")
             tags = {"file.pe.sections.hash": [s["md5"]]}
             if section_name:
-                tags["file.pe.sections.name"] = section_name
+                tags["file.pe.sections.name"] = [section_name]
             ResultSection(
                 f"{section_name} - Virtual: {hex(s['virtual_address'])}({hex(s['virtual_size'])} bytes) - "
                 f"Physical: ({hex(s['raw_size'])} bytes) - hash: {s['md5']} - entropy: {s['entropy']}",
