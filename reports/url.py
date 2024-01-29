@@ -26,23 +26,30 @@ def v3(doc: dict):
     hit_list = list()
     und_list = list()
     sig_list = list()
-    for av, props in sorted(attributes["last_analysis_results"].items()):
-        if props["category"] == "malicious":
-            hit_list.append(av)
-            sig_list.append(f"{av}.{props['result']}")
-        elif props["category"] == "undetected":
-            und_list.append(av)
+    if attributes.get("last_analysis_results"):
+        for av, props in sorted(attributes["last_analysis_results"].items()):
+            if props["category"] == "malicious":
+                hit_list.append(av)
+                sig_list.append(f"{av}.{props['result']}")
+            elif props["category"] == "undetected":
+                und_list.append(av)
 
     # Submission meta
     categories = [v for k, v in attributes.get("categories", {}).items()]
     body_dict = {
         "Categories": ", ".join(categories),
-        "Scan Date": format_time_from_epoch(attributes["last_analysis_date"]),
-        "First Seen": format_time_from_epoch(attributes["first_submission_date"]),
-        "Last Seen": format_time_from_epoch(attributes["last_submission_date"]),
         "Permalink": f"https://www.virustotal.com/gui/url/{doc['id']}",
-        "Reputation": attributes["reputation"],
     }
+    if attributes.get("last_analysis_date"):
+        body_dict["Scan Date"] = format_time_from_epoch(attributes["last_analysis_date"])
+
+    if attributes.get("first_submission_date"):
+        body_dict["First Seen"] = format_time_from_epoch(attributes["first_submission_date"])
+        body_dict["Last Seen"] = format_time_from_epoch(attributes["last_submission_date"])
+
+    if attributes.get("reputation"):
+        body_dict["Reputation"] = attributes["reputation"]
+
     if hit_list:
         body_dict["Detected By"] = ", ".join(hit_list)
     elif und_list:

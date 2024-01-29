@@ -15,12 +15,13 @@ def v3(doc: dict):
     hit_list = list()
     und_list = list()
     sig_list = list()
-    for av, props in sorted(attributes["last_analysis_results"].items()):
-        if props["category"] == "malicious":
-            hit_list.append(av)
-            sig_list.append(f"{av}.{props['result']}")
-        elif props["category"] == "undetected":
-            und_list.append(av)
+    if attributes.get("last_analysis_results"):
+        for av, props in sorted(attributes["last_analysis_results"].items()):
+            if props["category"] == "malicious":
+                hit_list.append(av)
+                sig_list.append(f"{av}.{props['result']}")
+            elif props["category"] == "undetected":
+                und_list.append(av)
 
     # Submission meta
     categories = [v for _, v in attributes.get("categories", {}).items()]
@@ -28,8 +29,9 @@ def v3(doc: dict):
         "Categories": ", ".join(categories),
         "Last Modification Date": format_time_from_epoch(attributes["last_modification_date"]),
         "Permalink": f"https://www.virustotal.com/gui/{doc['type']}/{doc['id']}",
-        "Reputation": attributes["reputation"],
     }
+    if attributes.get("reputation"):
+        body_dict["Reputation"] = attributes["reputation"]
     if hit_list:
         body_dict["Detected By"] = ", ".join(hit_list)
     elif und_list:
