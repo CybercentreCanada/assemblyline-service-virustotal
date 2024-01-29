@@ -243,7 +243,7 @@ def attach_ontology(ontology_helper: OntologyHelper, doc: dict):
 
             if proc["end_time"] == float("inf"):
                 proc["end_time"] = None
-            ontology_helper.add_result_part(Process, proc)
+            ontology_helper.add_result_part(ProcessModel, proc)
     except ValueError as e:
         # VirusTotal didn't provide enough information to create a unique identifier
         if "The objectid needs its required arguments" in str(e):
