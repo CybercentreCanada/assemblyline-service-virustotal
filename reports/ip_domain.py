@@ -29,8 +29,9 @@ def v3(doc: dict):
         "Categories": ", ".join(categories),
         "Last Modification Date": format_time_from_epoch(attributes["last_modification_date"]),
         "Permalink": f"https://www.virustotal.com/gui/{doc['type']}/{doc['id']}",
-        "Reputation": attributes["reputation"],
     }
+    if attributes.get("reputation"):
+        body_dict["Reputation"] = attributes["reputation"]
     if hit_list:
         body_dict["Detected By"] = ", ".join(hit_list)
     elif und_list:
