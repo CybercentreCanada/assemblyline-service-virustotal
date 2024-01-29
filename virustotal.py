@@ -129,6 +129,8 @@ class VirusTotal(ServiceBase):
     def analyze_response(self, response: dict, request: ServiceRequest):
         if not response:
             return
+        elif response.get("error", {}).get("code") == "NotFoundError":
+            return
 
         def download_sandbox_files():
             sandbox_name = response["attributes"]["sandbox_name"]
