@@ -26,12 +26,13 @@ def v3(doc: dict):
     hit_list = list()
     und_list = list()
     sig_list = list()
-    for av, props in sorted(attributes["last_analysis_results"].items()):
-        if props["category"] == "malicious":
-            hit_list.append(av)
-            sig_list.append(f"{av}.{props['result']}")
-        elif props["category"] == "undetected":
-            und_list.append(av)
+    if attributes.get("last_analysis_results"):
+        for av, props in sorted(attributes["last_analysis_results"].items()):
+            if props["category"] == "malicious":
+                hit_list.append(av)
+                sig_list.append(f"{av}.{props['result']}")
+            elif props["category"] == "undetected":
+                und_list.append(av)
 
     # Submission meta
     categories = [v for k, v in attributes.get("categories", {}).items()]
