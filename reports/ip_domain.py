@@ -24,7 +24,7 @@ def v3(doc: dict):
                 und_list.append(av)
 
     # Submission meta
-    categories = [v for _, v in attributes.get("categories", {}).items()]
+    categories = list(set([v.lower() for v in attributes.get("categories", {}).values()]))
     body_dict = {
         "Categories": ", ".join(categories),
         "Last Modification Date": format_time_from_epoch(attributes["last_modification_date"]),
