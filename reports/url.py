@@ -35,7 +35,7 @@ def v3(doc: dict):
                 und_list.append(av)
 
     # Submission meta
-    categories = [v for k, v in attributes.get("categories", {}).items()]
+    categories = list(set([v.lower() for v in attributes.get("categories", {}).values()]))
     body_dict = {
         "Categories": ", ".join(categories),
         "Permalink": f"https://www.virustotal.com/gui/url/{doc['id']}",
