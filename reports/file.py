@@ -25,6 +25,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
         f'{attributes.get("meaningful_name", file_name)}',
         heuristic=heuristic,
         classification=Classification.UNRESTRICTED,
+        tags={'file.name.extracted': attributes.get('names', [])}
     )
 
     # Submission meta
