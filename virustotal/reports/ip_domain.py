@@ -3,7 +3,7 @@ import json
 from assemblyline.common import forge
 from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection
 
-from reports.common.processing import format_time_from_epoch
+from virustotal.reports.common.processing import format_time_from_epoch
 
 Classification = forge.get_classification()
 
