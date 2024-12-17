@@ -80,16 +80,16 @@ General Assemblyline documentation can be found at: https://cybercentrecanada.gi
 
 # Service Virustotal
 
-Ce service d'Assemblyline vérifie (et éventuellement soumet) les fichiers/URL à VirusTotal pour analyse.
+Ce service d'Assemblyline vérifie (et peut soumettre) des fichiers/URL à VirusTotal pour analyse.
 
 ## Détails du service
 **NOTE** : Ce service **exige** que vous ayez votre propre clé API
 
 ### Exécution
 
-Ce service soumettra le fichier à VirusTotal pour analyse via l'API REST v3.
+Ce service permet de soumettre un fichier à VirusTotal pour analyse via l'API REST v3.
 
-Parce que le fichier quitte l'infrastructure Assemblyline, si l'utilisateur le sélectionne, il le préviendra que son fichier ou les métadonnées liées à son fichier vont quitter notre système.
+Étant donné que le fichier quitte l'infrastructure d'Assemblyline, le système va prévenir l'utilisateur et l'informer que le fichier et les métadonnées liées à la soumission quitte notre environment.
 
 ### Configuration
 
@@ -109,7 +109,7 @@ Parce que le fichier quitte l'infrastructure Assemblyline, si l'utilisateur le s
 
 | Nom | Description |
 | :------------------: | :------------------------------------------------------------------------------------------------- |
-Clé de l'API VirusTotal | Clé de l'API VirusTotal | Clé de l'API VirusTotal | Clé de l'API VirusTotal
+| api_key | Clé de l'API VirusTotal
 | dynamic_submit | Indique au service de soumettre à VirusTotal s'il n'y a pas de rapport existant sur la soumission.
 | ignore_submitted_url | Indique au service d'ignorer le submitted_url à la profondeur 0 et de procéder à l'utilisation du SHA256 du fichier.
 | relations | Une liste de relations séparées par des virgules que nous voulons obtenir à propos de la soumission.
