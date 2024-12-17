@@ -1,0 +1,23 @@
+{
+  "template": "https://github.com/CybercentreCanada/assemblyline-service-template.git",
+  "commit": "6d2fcb683f00eeda843cf2c40981e266679a97dc",
+  "checkout": null,
+  "context": {
+    "cookiecutter": {
+      "service_name": "virustotal",
+      "__svc_name": "virustotal",
+      "__repository": "assemblyline-service-virustotal",
+      "__pkg_name": "virustotal",
+      "__class_name": "Virustotal",
+      "short_description": "This Assemblyline service checks (and optionally submits) files/URLs to VirusTotal for analysis.",
+      "short_description_fr": "Ce service d'Assemblyline vérifie (et éventuellement soumet) les fichiers/URL à VirusTotal pour analyse.",
+      "stage": "CORE",
+      "category": "External",
+      "org_name_full": "CybercentreCanada",
+      "org_name_short": "cccs",
+      "license": "mit",
+      "_template": "https://github.com/CybercentreCanada/assemblyline-service-template.git"
+    }
+  },
+  "directory": null
+}
