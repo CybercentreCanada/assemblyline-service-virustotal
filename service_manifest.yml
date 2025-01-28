@@ -24,7 +24,7 @@ config:
   api_key: ""
   host: ""
   proxy: ""
-  allow_dynamic_submit: true
+  allow_dynamic_resubmit: true
   av_config:
     term_blocklist: ["Antiy-AVL", "APEX", "Jiangmin", "not-a-virus"] # Ignore results based on presence of term in signature combination
     revised_sig_score_map: # Remap scoring based on signature combination
