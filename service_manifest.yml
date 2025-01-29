@@ -100,6 +100,12 @@ heuristics:
     filetype: "*"
     description: "VT has crowdsourced AI analysis of the file"
 
+  - heur_id: 1002
+    name: Malware Configuration Extracted
+    score: 1000
+    filetype: "*"
+    description: "VT has extracted malware configuration"
+
 docker_config:
   image: ${REGISTRY}cccs/assemblyline-service-virustotal:$SERVICE_TAG
   cpu_cores: 0.25
