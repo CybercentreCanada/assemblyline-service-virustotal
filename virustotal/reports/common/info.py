@@ -107,9 +107,11 @@ def pe_section(info={}, exiftool={}, signature={}):
 
     return main_section
 
+
 def malware_config_section(malware_config={}):
     tags = {}
     heur = None
+
     def tag_output(output: Any, tags: dict = {}):
         def tag_string(value):
             if regex.search(IP_ONLY_REGEX, value):
@@ -146,7 +148,10 @@ def malware_config_section(malware_config={}):
 
     # Tag anything resembling an IP, domain, or URI
     tag_output(malware_config, tags)
-    return ResultJSONSection("Malware Configuration", section_body=malware_config, tags=tags, heuristic=heur)
+    section = ResultJSONSection("Malware Configuration", tags=tags, heuristic=heur)
+    section.set_json(malware_config)
+    return section
+
 
 # Modeling output after YARA service
 def yara_section(rule_matches=[]):
