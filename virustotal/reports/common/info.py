@@ -1,6 +1,10 @@
 import json
+import regex
 
-from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection
+from typing import Any
+
+from assemblyline.odm import IP_ONLY_REGEX, DOMAIN_ONLY_REGEX, FULL_URI
+from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection, ResultJSONSection, Heuristic
 
 
 # Modeling output after PDFId service
@@ -103,6 +107,46 @@ def pe_section(info={}, exiftool={}, signature={}):
 
     return main_section
 
+def malware_config_section(malware_config={}):
+    tags = {}
+    heur = None
+    def tag_output(output: Any, tags: dict = {}):
+        def tag_string(value):
+            if regex.search(IP_ONLY_REGEX, value):
+                tags.setdefault("network.static.ip", []).append(value)
+            elif regex.search(DOMAIN_ONLY_REGEX, value):
+                tags.setdefault("network.static.domain", []).append(value)
+            elif regex.search(FULL_URI, value):
+                tags.setdefault("network.static.uri", []).append(value)
+
+        if isinstance(output, dict):
+            # Iterate over values of dictionary
+            for value in output.values():
+                if isinstance(value, dict):
+                    tag_output(value, tags)
+                elif isinstance(value, list):
+                    [tag_output(v, tags) for v in value]
+                elif isinstance(value, str):
+                    tag_string(value)
+
+        elif isinstance(output, str):
+            tag_string(output)
+
+    # Add tags for attribution
+    for k, v in malware_config.items():
+        if "campaign" in k:
+            tags.setdefault("attribution.campaign", []).append(v)
+        elif "family" in k:
+            tags.setdefault("attribution.family", []).append(v)
+        elif "domain" in k:
+            tags.setdefault("attribution.network", []).append(v)
+
+        if not heur and ("campaign" in k or "family" in k):
+            heur = Heuristic(1002)
+
+    # Tag anything resembling an IP, domain, or URI
+    tag_output(malware_config, tags)
+    return ResultJSONSection("Malware Configuration", section_body=malware_config, tags=tags, heuristic=heur)
 
 # Modeling output after YARA service
 def yara_section(rule_matches=[]):
