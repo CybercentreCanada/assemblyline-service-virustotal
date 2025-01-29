@@ -25,7 +25,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
         f'{attributes.get("meaningful_name", file_name)}',
         heuristic=heuristic,
         classification=Classification.UNRESTRICTED,
-        tags={'file.name.extracted': attributes.get('names', [])}
+        tags={"file.name.extracted": attributes.get("names", [])},
     )
 
     # Submission meta
@@ -88,13 +88,8 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
             main_section.add_subsection(info_section)
 
     # Malware Config
-    for k, v in attributes.get("malware_config", {}).items():
-        if "campaign" in k:
-            main_section.add_tag("attribution.campaign", v)
-        elif "family" in k:
-            main_section.add_tag("attribution.family", v)
-        elif "domain" in k:
-            main_section.add_tag("attribution.network", v)
+    if attributes.get("malware_config"):
+        info_section.add_subsection(info.malware_config_section(attributes["malware_config"]))
 
     infected_section, no_av_section = av_processor.get_av_results(attributes["last_analysis_results"])
     if infected_section.subsections:

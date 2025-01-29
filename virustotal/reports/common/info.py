@@ -1,6 +1,15 @@
 import json
+import regex
 
-from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection
+from typing import Any
+
+from assemblyline.odm import IP_ONLY_REGEX, DOMAIN_ONLY_REGEX, FULL_URI
+from assemblyline_v4_service.common.result import (
+    BODY_FORMAT,
+    ResultSection,
+    ResultJSONSection,
+    Heuristic,
+)
 
 
 # Modeling output after PDFId service
@@ -93,22 +102,72 @@ def pe_section(info={}, exiftool={}, signature={}):
     if info.get("import_list", None):
         imports = ResultSection("PE: IMPORTS", parent=main_section)
         for imp in info["import_list"]:
-            imports.add_subsection(ResultSection(f"[{imp['library_name']}]", body=", ".join(imp["imported_functions"])))
+            imports.add_subsection(
+                ResultSection(
+                    f"[{imp['library_name']}]",
+                    body=", ".join(imp["imported_functions"]),
+                )
+            )
 
     # RESOURCES-VersionInfo
     if signature:
         ResultSection(
-            "PE: RESOURCES", body=json.dumps(signature), body_format=BODY_FORMAT.KEY_VALUE, parent=main_section
+            "PE: RESOURCES",
+            body=json.dumps(signature),
+            body_format=BODY_FORMAT.KEY_VALUE,
+            parent=main_section,
         )
 
     return main_section
+
+
+def malware_config_section(malware_config={}):
+    tags = {}
+    heur = None
+
+    def tag_output(output: Any):
+        def tag_string(value):
+            if regex.search(IP_ONLY_REGEX, value):
+                tags.setdefault("network.static.ip", []).append(value)
+            elif regex.search(DOMAIN_ONLY_REGEX, value):
+                tags.setdefault("network.static.domain", []).append(value)
+            elif regex.search(FULL_URI, value):
+                tags.setdefault("network.static.uri", []).append(value)
+
+        if isinstance(output, dict):
+            # Iterate over values of dictionary
+            for key, value in output.items():
+                if key == "family":
+                    nonlocal heur
+                    heur = Heuristic(1002)
+                    tags.setdefault("attribution.family", []).append(value)
+
+                if isinstance(value, dict):
+                    tag_output(value)
+                elif isinstance(value, list):
+                    [tag_output(v) for v in value]
+                elif isinstance(value, str):
+                    tag_string(value)
+
+        elif isinstance(output, str):
+            tag_string(output)
+
+    # Tag anything resembling an IP, domain, or URI
+    tag_output(malware_config)
+    section = ResultJSONSection("Malware Configuration", tags=tags, heuristic=heur)
+    section.set_json(malware_config)
+    return section
 
 
 # Modeling output after YARA service
 def yara_section(rule_matches=[]):
     yara_section = ResultSection("Crowdsourced YARA")
     for rule in rule_matches:
-        section_body = {"ID": rule["ruleset_id"], "Name": rule["rule_name"], "Source": rule["source"]}
+        section_body = {
+            "ID": rule["ruleset_id"],
+            "Name": rule["rule_name"],
+            "Source": rule["source"],
+        }
 
         if rule.get("author"):
             section_body["Author"] = rule["author"]
