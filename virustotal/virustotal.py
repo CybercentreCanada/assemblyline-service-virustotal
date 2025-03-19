@@ -60,6 +60,7 @@ class VirusTotal(ServiceBase):
                 ]
             )
             regex_list = []
+            self.safelist_match = []
 
             # Extend with safelisted matches
             [self.safelist_match.extend(match_list) for _, match_list in safelist.get("match", {}).items()]
