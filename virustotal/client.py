@@ -14,10 +14,10 @@ REPORT_API_MAP = {"file": "/files/{}", "url": "/urls/{}", "ip": "/ip_addresses/{
 class VTClient:
     """Client to interact with VirusTotal API and cache."""
 
-    def __init__(self, vt_client_kwargs: Dict[str, Any], cache_settings: List[Dict], cache_only: bool = False):
+    def __init__(self, vt_client_kwargs: Dict[str, Any], cache_settings: List[Dict]):
         """Initialize the VirusTotal client."""
         # Only use cached data (ideal for air-gapped systems that can't reach out to VirusTotal)
-        self.cache_only = cache_only
+        self.cache_only = cache_settings.get("cache_only", False)
 
         # Initialize VirusTotal client
         if not self.cache_only:
