@@ -152,11 +152,15 @@ class VirusTotal(ServiceBase):
             # Search for all tags associated to the file task and add it to the query collection
             for k, v in request.task.tags.items():
                 if "uri" in k and v not in query_collection["url"]:
-                    query_collection["url"].append(v)
+                    query_collection["url"].extend(v)
                 elif "domain" in k and v not in query_collection["domain"]:
-                    query_collection["domain"].append(v)
+                    query_collection["domain"].extend(v)
                 elif "ip" in k and v not in query_collection["ip"]:
-                    query_collection["ip"].append(v)
+                    query_collection["ip"].extend(v)
+
+            # Remove duplicates
+            for ioc in ["url", "ip", "domain"]:
+                query_collection[ioc] = list(set(query_collection[ioc]))
 
             # Pre-filter network IOCs based on AL safelist
             if self.safelist_regex or self.safelist_match:
