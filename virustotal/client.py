@@ -37,7 +37,7 @@ class VTClient:
             A map of the feed type to a list of reports.
 
         """
-        results = {}
+        results = {"file": [], "url": [], "ip": [], "domain": []}
 
         # Iterate over all the cache clients to find information mentioned in the collection
         for cache in self.cache:
@@ -48,7 +48,7 @@ class VTClient:
                     collection[feed].remove(report["id"])
 
                 # Merge results with the final output
-                results.setdefault(feed, []).extend(reports)
+                results[feed].extend(reports)
 
         # If we're only leveraging the cache, then return what we know
         if self.cache_only:
