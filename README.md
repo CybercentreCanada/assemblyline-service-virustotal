@@ -33,7 +33,6 @@ Because the file leaves the Assemblyline infrastructure, if selected by the user
 | allow_dynamic_submit | Allow users to submit file to VirusTotal?                                                                                                                             |
 |      av_config       | Configuration block that tells the service to ignore/remap certain AV verdicts from the File Report. See [Service Manifest](./service_manifest.yml) for more details. |
 |        cache         | A list of databases containing a cache of VirusTotal data                                                                                                             |
-|      cache_only      | Only use the cache of VirusTotal data.                                                                                                                                |
 
 ##### VirusTotal cache
 
@@ -107,7 +106,6 @@ Ce service permet de soumettre un fichier à VirusTotal pour analyse via l'API R
 | allow_dynamic_submit | Autoriser les utilisateurs à soumettre un fichier à VirusTotal ?                                                                                                                  |
 |      av_config       | Bloc de configuration qui indique au service d'ignorer/remapper certains verdicts AV du rapport de fichier. Voir [Service Manifest](./service_manifest.yml) pour plus de détails. |
 |        cache         | Une liste de bases de données contenant un cache de données VirusTotal.                                                                                                           |
-|      cache_only      | Utiliser uniquement le cache des données de VirusTotal.                                                                                                                           |
 
 #### Paramètres de soumission
 

@@ -24,8 +24,9 @@ config:
   host: ""
   proxy: ""
   allow_dynamic_resubmit: true
-  cache_only: false
   cache:
+    cache_only: false
+    backends: []
     # - type: elasticsearch
     #   params:
     #     hosts: ["http://elastic:devpass@localhost:9200"]

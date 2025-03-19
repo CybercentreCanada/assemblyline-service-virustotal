@@ -127,8 +127,7 @@ class VirusTotal(ServiceBase):
                 "proxy": self.config.get("proxy") or None,
                 "host": self.config.get("host") or None,
             },
-            cache_settings=self.config.get("cache", []),
-            cache_only=self.config.get("cache_only", False),
+            cache_settings=self.config.get("cache", {}),
         )
 
         # Maintain a record of items that you want to query
