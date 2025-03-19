@@ -1,0 +1,216 @@
+{
+    "template": {
+      "settings": {
+        "index": {
+          "lifecycle": {
+            "name": "virustotal-policy",
+            "rollover_alias": "virustotal_v3_behaviour"
+          },
+          "routing": {
+            "allocation": {
+              "include": {
+                "_tier_preference": "data_content"
+              }
+            }
+          },
+          "mapping": {
+            "total_fields": {
+              "limit": "10000"
+            }
+          },
+          "number_of_shards": "8",
+          "number_of_replicas": "1"
+        }
+      },
+      "mappings": {
+        "dynamic": "false",
+        "dynamic_templates": [
+          {
+            "don't index others": {
+              "path_match": "*",
+              "mapping": {
+                "index": false
+              }
+            }
+          }
+        ],
+        "properties": {
+          "attributes": {
+            "dynamic": "false",
+            "properties": {
+              "activities_started": {
+                "type": "text"
+              },
+              "analysis_date": {
+                "type": "date",
+                "format": "epoch_second"
+              },
+              "behash": {
+                "type": "text"
+              },
+              "calls_highlighted": {
+                "type": "text"
+              },
+              "command_executions": {
+                "type": "text"
+              },
+              "files_opened": {
+                "type": "text"
+              },
+              "files_written": {
+                "type": "text"
+              },
+              "has_html_report": {
+                "type": "boolean"
+              },
+              "has_pcap": {
+                "type": "boolean"
+              },
+              "ids_results": {
+                "type": "nested",
+                "properties": {
+                  "alert_context": {
+                    "dynamic": "false",
+                    "properties": {
+                      "dest_ip": {
+                        "type": "text"
+                      },
+                      "dest_port": {
+                        "type": "integer"
+                      },
+                      "hostname": {
+                        "type": "text"
+                      },
+                      "protocol": {
+                        "type": "text"
+                      },
+                      "src_ip": {
+                        "type": "text"
+                      },
+                      "src_port": {
+                        "type": "integer"
+                      },
+                      "url": {
+                        "type": "text"
+                      }
+                    }
+                  },
+                  "alert_severity": {
+                    "type": "text"
+                  },
+                  "rule_id": {
+                    "type": "text"
+                  },
+                  "rule_msg": {
+                    "type": "text"
+                  },
+                  "rule_source": {
+                    "type": "text"
+                  }
+                }
+              },
+              "last_modification_date": {
+                "type": "date"
+              },
+              "modules_loaded": {
+                "type": "text"
+              },
+              "mutexes_created": {
+                "type": "text"
+              },
+              "mutexes_opened": {
+                "type": "text"
+              },
+              "processes_created": {
+                "type": "text"
+              },
+              "processes_terminated": {
+                "type": "text"
+              },
+              "registry_keys_deleted": {
+                "type": "text"
+              },
+              "registry_keys_opened": {
+                "type": "text"
+              },
+              "registry_keys_set": {
+                "type": "nested",
+                "properties": {
+                  "key": {
+                    "type": "text"
+                  },
+                  "value": {
+                    "type": "text"
+                  }
+                }
+              },
+              "sandbox_name": {
+                "type": "text"
+              },
+              "shared_preferences_sets": {
+                "type": "nested",
+                "properties": {
+                  "key": {
+                    "type": "text"
+                  },
+                  "value": {
+                    "type": "text"
+                  }
+                }
+              },
+              "tags": {
+                "type": "text"
+              },
+              "text_highlighted": {
+                "type": "text"
+              },
+              "tls": {
+                "type": "nested",
+                "properties": {
+                  "issuer": {
+                    "type": "object",
+                    "dynamic": "false"
+                  },
+                  "ja3": {
+                    "type": "text"
+                  },
+                  "ja3s": {
+                    "type": "text"
+                  },
+                  "serial_number": {
+                    "type": "text"
+                  },
+                  "sni": {
+                    "type": "text"
+                  },
+                  "subject": {
+                    "type": "object",
+                    "dynamic": "false"
+                  },
+                  "thumbprint": {
+                    "type": "text"
+                  },
+                  "version": {
+                    "type": "text"
+                  }
+                }
+              },
+              "verdicts": {
+                "type": "text"
+              }
+            }
+          },
+          "id": {
+            "type": "text"
+          },
+          "links": {
+            "type": "object",
+            "dynamic": "false"
+          }
+        }
+      },
+      "aliases": {
+        "vt_behaviour": {}
+      }
+    }
+  }

@@ -1,19 +1,21 @@
-import json
-import regex
+"""Functions to create ResultSections for the VirusTotal service."""
 
+import json
 from typing import Any
 
-from assemblyline.odm import IP_ONLY_REGEX, DOMAIN_ONLY_REGEX, FULL_URI
-from assemblyline_v4_service.common.result import (
-    BODY_FORMAT,
-    ResultSection,
-    ResultJSONSection,
-    Heuristic,
-)
+import regex
+from assemblyline.odm import DOMAIN_ONLY_REGEX, FULL_URI, IP_ONLY_REGEX
+from assemblyline_v4_service.common.result import BODY_FORMAT, Heuristic, ResultJSONSection, ResultSection
 
 
 # Modeling output after PDFId service
-def pdf_section(info={}, exiftool={}):
+def pdf_section(info={}, exiftool={}) -> ResultSection:
+    """Create a ResultSection for PDF information.
+
+    Returns:
+        ResultSection: A ResultSection containing the PDF information
+
+    """
     main_section = ResultSection("PDF INFO")
     pdf_properties = ResultSection("PDF Properties", parent=main_section)
     pdf_properties.add_line(f"PDF Header: {info['header']}")
@@ -32,7 +34,13 @@ def pdf_section(info={}, exiftool={}):
 
 
 # Modeling output after PEFile service
-def pe_section(info={}, exiftool={}, signature={}):
+def pe_section(info={}, exiftool={}, signature={}) -> ResultSection:
+    """Create a ResultSection for PE information.
+
+    Returns:
+        ResultSection: A ResultSection containing the PE information
+
+    """
     # HEADER
     main_section = ResultSection("PE INFO")
     header_body = {}
@@ -121,7 +129,13 @@ def pe_section(info={}, exiftool={}, signature={}):
     return main_section
 
 
-def malware_config_section(malware_config={}):
+def malware_config_section(malware_config={}) -> ResultSection:
+    """Create a ResultSection for malware configuration.
+
+    Returns:
+        ResultSection: A ResultSection containing the malware config information
+
+    """
     tags = {}
     heur = None
 
@@ -160,7 +174,13 @@ def malware_config_section(malware_config={}):
 
 
 # Modeling output after YARA service
-def yara_section(rule_matches=[]):
+def yara_section(rule_matches=[]) -> ResultSection:
+    """Create a ResultSection for YARA rule matches.
+
+    Returns:
+        ResultSection: A ResultSection containing the YARA rule information
+
+    """
     yara_section = ResultSection("Crowdsourced YARA")
     for rule in rule_matches:
         section_body = {

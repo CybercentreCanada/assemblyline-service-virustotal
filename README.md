@@ -1,14 +1,16 @@
 [![Discord](https://img.shields.io/badge/chat-on%20discord-7289da.svg?sanitize=true)](https://discord.gg/GUAy9wErNu)
 [![](https://img.shields.io/discord/908084610158714900)](https://discord.gg/GUAy9wErNu)
 [![Static Badge](https://img.shields.io/badge/github-assemblyline-blue?logo=github)](https://github.com/CybercentreCanada/assemblyline)
-[![Static Badge](https://img.shields.io/badge/github-assemblyline\_service\_virustotal-blue?logo=github)](https://github.com/CybercentreCanada/assemblyline-service-virustotal)
+[![Static Badge](https://img.shields.io/badge/github-assemblyline_service_virustotal-blue?logo=github)](https://github.com/CybercentreCanada/assemblyline-service-virustotal)
 [![GitHub Issues or Pull Requests by label](https://img.shields.io/github/issues/CybercentreCanada/assemblyline/service-virustotal)](https://github.com/CybercentreCanada/assemblyline/issues?q=is:issue+is:open+label:service-virustotal)
 [![License](https://img.shields.io/github/license/CybercentreCanada/assemblyline-service-virustotal)](./LICENSE)
+
 # Virustotal Service
 
 This Assemblyline service checks (and optionally submits) files/URLs to VirusTotal for analysis.
 
 ## Service Details
+
 **NOTE**: This service **requires** you to have your own API key (Paid or Free).
 
 ### Execution
@@ -30,21 +32,20 @@ Because the file leaves the Assemblyline infrastructure, if selected by the user
 |        proxy         | Proxy to connect to VirusTotal with                                                                                                                                   |
 | allow_dynamic_submit | Allow users to submit file to VirusTotal?                                                                                                                             |
 |      av_config       | Configuration block that tells the service to ignore/remap certain AV verdicts from the File Report. See [Service Manifest](./service_manifest.yml) for more details. |
+|        cache         | A list of databases containing a cache of VirusTotal data                                                                                                             |
+|      cache_only      | Only use the cache of VirusTotal data.                                                                                                                                |
+
+##### VirusTotal cache
+
+To configure the service to use a `cache` of VirusTotal data, see the supported backends mentioned [here](./virustotal/cache/).
 
 #### Submission Parameters
 
-|         Name         | Description                                                                                        |
-| :------------------: | :------------------------------------------------------------------------------------------------- |
-|       api_key        | Individual VirusTotal API key                                                                      |
-|    dynamic_submit    | Instructs the service to submit to VirusTotal if there is no existing report about the submission  |
-| ignore_submitted_url | Instructs service to ignore the submitted_url at depth 0 and proceed to use the SHA256 of the file |
-|    relationships     | A list of comma-separated relationships that we want to get about the submission                   |
-| analyze_relationship | Perform analysis on the relationships to the submission                                            |
-|    download_evtx     | Have the service download EVTX from sandbox analyses.                                              |
-|    download_pcap     | Have the service download EVTX from sandbox analyses.                                              |
-
-Note: For operations like `download_evtx` & `download_pcap`, the `analyze_relationship` flag is required as it entails more API calls to
-retrieve additional reports to get a full picture of the analysis done by VirusTotal.
+|       Name        | Description                                                                                                  |
+| :---------------: | :----------------------------------------------------------------------------------------------------------- |
+|      api_key      | Individual VirusTotal API key                                                                                |
+|  dynamic_submit   | Instructs the service to submit to VirusTotal if there is no existing report about the submission            |
+| exhaustive_search | Performs a lookup of all network IOCs tagged that are associated to the file (recommended to use with cache) |
 
 ## Image variants and tags
 
@@ -83,6 +84,7 @@ General Assemblyline documentation can be found at: https://cybercentrecanada.gi
 Ce service d'Assemblyline vérifie (et peut soumettre) des fichiers/URL à VirusTotal pour analyse.
 
 ## Détails du service
+
 **NOTE** : Ce service **exige** que vous ayez votre propre clé API
 
 ### Exécution
@@ -97,28 +99,23 @@ Ce service permet de soumettre un fichier à VirusTotal pour analyse via l'API R
 
 #### Configuration du service
 
-| Nom | Description |
-| :------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Clé d'API VirusTotal | Clé d'API VirusTotal globale pour le système à utiliser si l'auteur ne fournit pas sa propre clé d'API.
-| host | L'hôte de VirusTotal est par défaut l'hôte externe `https://www.virustotal.com` mais peut être spécifié pour le test ou l'hébergement interne.                                               |
-| Proxy | Proxy à utiliser pour se connecter à VirusTotal.
-| allow_dynamic_submit | Autoriser les utilisateurs à soumettre un fichier à VirusTotal ?                                                                                                                             |
-| av_config | Bloc de configuration qui indique au service d'ignorer/remapper certains verdicts AV du rapport de fichier. Voir [Service Manifest](./service_manifest.yml) pour plus de détails. |
+|         Nom          | Description                                                                                                                                                                       |
+| :------------------: | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+|       api_key        | Clé d'API VirusTotal globale pour le système à utiliser si l'auteur ne fournit pas sa propre clé d'API.                                                                           |
+|         host         | L'hôte de VirusTotal est par défaut l'hôte externe `https://www.virustotal.com` mais peut être spécifié pour le test ou l'hébergement interne.                                    |
+|        Proxy         | Proxy à utiliser pour se connecter à VirusTotal.                                                                                                                                  |
+| allow_dynamic_submit | Autoriser les utilisateurs à soumettre un fichier à VirusTotal ?                                                                                                                  |
+|      av_config       | Bloc de configuration qui indique au service d'ignorer/remapper certains verdicts AV du rapport de fichier. Voir [Service Manifest](./service_manifest.yml) pour plus de détails. |
+|        cache         | Une liste de bases de données contenant un cache de données VirusTotal.                                                                                                           |
+|      cache_only      | Utiliser uniquement le cache des données de VirusTotal.                                                                                                                           |
 
 #### Paramètres de soumission
 
-| Nom | Description |
-| :------------------: | :------------------------------------------------------------------------------------------------- |
-| api_key | Clé de l'API VirusTotal
-| dynamic_submit | Indique au service de soumettre à VirusTotal s'il n'y a pas de rapport existant sur la soumission.
-| ignore_submitted_url | Indique au service d'ignorer le submitted_url à la profondeur 0 et de procéder à l'utilisation du SHA256 du fichier.
-| relations | Une liste de relations séparées par des virgules que nous voulons obtenir à propos de la soumission.
-| analyser_relationship | Effectuer une analyse sur les relations avec la soumission
-| download_evtx | Demande au service de télécharger les EVTX à partir des analyses du bac à sable.                                              |
-| download_pcap | Demande au service de télécharger l'EVTX à partir d'analyses en bac à sable.                                              |
-
-Note : Pour des opérations comme `download_evtx` et `download_pcap`, l'option `analyze_relationship` est nécessaire car elle implique plus d'appels à l'API pour
-pour récupérer des rapports supplémentaires afin d'obtenir une image complète de l'analyse effectuée par VirusTotal.
+|        Nom        | Description                                                                                                                 |
+| :---------------: | :-------------------------------------------------------------------------------------------------------------------------- |
+|      api_key      | Clé de l'API VirusTotal                                                                                                     |
+|  dynamic_submit   | Indique au service de soumettre à VirusTotal s'il n'y a pas de rapport existant sur la soumission.                          |
+| exhaustive_search | Effectue une recherche de tous les IOCs réseau marqués qui sont associés au fichier (utilisation recommandée avec le cache) |
 
 ## Variantes et étiquettes d'image
 

@@ -6,7 +6,7 @@ description: >
 accepts: .*
 rejects: empty|metadata/.*
 
-stage: CORE
+stage: SECONDARY
 category: External
 
 file_required: true
@@ -17,7 +17,6 @@ enabled: false
 is_external: true
 licence_count: 0
 
-uses_metadata: true
 privileged: true
 
 config:
@@ -25,6 +24,17 @@ config:
   host: ""
   proxy: ""
   allow_dynamic_resubmit: true
+  cache_only: false
+  cache:
+    # - type: elasticsearch
+    #   params:
+    #     hosts: ["http://elastic:devpass@localhost:9200"]
+    #     apikey: null
+    #     index_aliases:
+    #       file: ["virustotal_v3_file"]
+    #       url: ["virustotal_v3_url"]
+    #       ip: ["virustotal_v3_ip"]
+    #       domain: ["virustotal_v3_domain"]
   av_config:
     term_blocklist: ["Antiy-AVL", "APEX", "Jiangmin", "not-a-virus"] # Ignore results based on presence of term in signature combination
     revised_sig_score_map: # Remap scoring based on signature combination
@@ -50,23 +60,7 @@ submission_params:
     type: bool
     value: false
   - default: false
-    name: ignore_submitted_url
-    type: bool
-    value: false
-  - default: false
-    name: analyze_relationship
-    type: bool
-    value: false
-  - default: "contacted_ips,contacted_domains,contacted_urls,behaviours"
-    name: relationships
-    type: str
-    value: "contacted_ips,contacted_domains,contacted_urls,behaviours"
-  - default: false
-    name: download_evtx
-    type: bool
-    value: false
-  - default: false
-    name: download_pcap
+    name: exhaustive_search
     type: bool
     value: false
 

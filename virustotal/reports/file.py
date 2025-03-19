@@ -1,3 +1,5 @@
+"""Module for processing file reports from VirusTotal API v3."""
+
 import json
 
 from assemblyline.common import forge
@@ -11,7 +13,13 @@ from virustotal.reports.common.processing import AVResultsProcessor, format_time
 Classification = forge.get_classification()
 
 
-def v3(doc, file_name, av_processor: AVResultsProcessor):
+def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
+    """Create a ResultSection for a file report from VirusTotal API v3.
+
+    Returns:
+        ResultSection: A ResultSection containing the file report
+
+    """
     attributes = doc.get("attributes", {})
     context = doc.get("context_attributes", {})
 
@@ -22,7 +30,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
             heuristic.add_attack_id(CAPABILITY_LOOKUP[c])
 
     main_section = ResultSection(
-        f'{attributes.get("meaningful_name", file_name)}',
+        f"{attributes.get('meaningful_name', file_name)}",
         heuristic=heuristic,
         classification=Classification.UNRESTRICTED,
         tags={"file.name.extracted": attributes.get("names", [])},
@@ -76,7 +84,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
             elif "crowdsourced_ai_results" in k:
                 [
                     ResultSection(
-                        title_text=f'Code Insight by {s["source"]}',
+                        title_text=f"Code Insight by {s['source']}",
                         body=s["analysis"],
                         heuristic=Heuristic(1001),
                         auto_collapse=True,
@@ -99,6 +107,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
 
 
 def attach_ontology(ontology_helper: None, doc: dict):
+    """Attach the ontology of the VirusTotal file report."""
     av_results = doc["attributes"]["last_analysis_results"]
     for details in av_results.values():
         result = details["result"]
