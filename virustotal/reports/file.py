@@ -65,7 +65,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
 
     # *_info Section
     info_found = any("_info" in k for k in attributes.keys()) or any(
-        [attributes.get(x) for x in ["crowdsourced_yara_results", "crowdsourced_ai_results"]]
+        [attributes.get(x) for x in ["crowdsourced_yara_results", "crowdsourced_ai_results", "malware_config"]]
     )
     if info_found:
         info_section = ResultSection("Info Section", auto_collapse=True)
@@ -92,12 +92,12 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
                     )
                     for s in v
                 ]
+            elif "malware_config" in k:
+                # Malware Config
+                info_section.add_subsection(info.malware_config_section(attributes["malware_config"]))
+
         if info_section.subsections:
             main_section.add_subsection(info_section)
-
-    # Malware Config
-    if attributes.get("malware_config"):
-        info_section.add_subsection(info.malware_config_section(attributes["malware_config"]))
 
     infected_section, no_av_section = av_processor.get_av_results(attributes["last_analysis_results"])
     if infected_section.subsections:
