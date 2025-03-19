@@ -6,7 +6,7 @@ description: >
 accepts: .*
 rejects: empty|metadata/.*
 
-stage: CORE
+stage: SECONDARY
 category: External
 
 file_required: true
@@ -17,7 +17,6 @@ enabled: false
 is_external: true
 licence_count: 0
 
-uses_metadata: true
 privileged: true
 
 config:
@@ -63,7 +62,7 @@ submission_params:
   - default: false
     name: exhaustive_search
     type: bool
-    value: true
+    value: false
 
 heuristics:
   - heur_id: 1
