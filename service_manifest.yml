@@ -17,6 +17,7 @@ enabled: false
 is_external: true
 licence_count: 0
 
+uses_tags: true
 privileged: true
 
 config:
