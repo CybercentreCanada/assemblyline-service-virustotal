@@ -25,7 +25,7 @@ class VTClient:
 
         # Initialize clients to interact with a cache of VirusTotal data
         self.cache: List[CacheClient] = []
-        for settings in cache_settings:
+        for settings in cache_settings.get("backends", []):
             if settings["type"] == "elasticsearch":
                 # Initialize a client that interacts with Elasticsearch
                 self.cache.append(ElasticClient(**settings["params"]))
