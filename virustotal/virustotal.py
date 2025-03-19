@@ -202,7 +202,8 @@ class VirusTotal(ServiceBase):
                             for report in self.client.bulk_search(
                                 {relationship_type: [d["id"] for d in data["data"]]}, submit_allowed=dynamic_submit
                             )[relationship_type]:
-                                relationship_section.add_subsection(TAG_TO_MODULE[relationship_type].v3(report))
+                                tag = "uri" if relationship_type == "url" else relationship_type
+                                relationship_section.add_subsection(TAG_TO_MODULE[tag].v3(report))
                             if relationship_section.subsections:
                                 file_result.add_subsection(relationship_section)
 

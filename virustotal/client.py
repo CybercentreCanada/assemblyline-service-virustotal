@@ -51,7 +51,7 @@ class VTClient:
                 results[feed].extend(reports)
 
         # If we're only leveraging the cache, then return what we know
-        if self.cache_only:
+        if not submit_allowed:
             return results
 
         # Otherwise seek out VirusTotal to provide information that isn't in the cache
