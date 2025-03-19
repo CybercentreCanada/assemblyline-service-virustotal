@@ -25,6 +25,17 @@ config:
   host: ""
   proxy: ""
   allow_dynamic_resubmit: true
+  cache_only: false
+  cache:
+    # - type: elasticsearch
+    #   params:
+    #     hosts: ["http://elastic:devpass@localhost:9200"]
+    #     apikey: null
+    #     index_aliases:
+    #       file: ["virustotal_v3_file"]
+    #       url: ["virustotal_v3_url"]
+    #       ip: ["virustotal_v3_ip"]
+    #       domain: ["virustotal_v3_domain"]
   av_config:
     term_blocklist: ["Antiy-AVL", "APEX", "Jiangmin", "not-a-virus"] # Ignore results based on presence of term in signature combination
     revised_sig_score_map: # Remap scoring based on signature combination
@@ -50,25 +61,9 @@ submission_params:
     type: bool
     value: false
   - default: false
-    name: ignore_submitted_url
+    name: exhaustive_search
     type: bool
-    value: false
-  - default: false
-    name: analyze_relationship
-    type: bool
-    value: false
-  - default: "contacted_ips,contacted_domains,contacted_urls,behaviours"
-    name: relationships
-    type: str
-    value: "contacted_ips,contacted_domains,contacted_urls,behaviours"
-  - default: false
-    name: download_evtx
-    type: bool
-    value: false
-  - default: false
-    name: download_pcap
-    type: bool
-    value: false
+    value: true
 
 heuristics:
   - heur_id: 1

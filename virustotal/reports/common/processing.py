@@ -1,7 +1,9 @@
+"""Module for processing AV results from VirusTotal."""
+
 import json
 import time
 from collections import defaultdict
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from assemblyline.common import forge
 from assemblyline_v4_service.common.result import BODY_FORMAT, Heuristic, ResultSection
@@ -10,10 +12,18 @@ Classification = forge.get_classification()
 
 
 def format_time_from_epoch(t):
+    """Format time from epoch to human readable format.
+
+    Returns:
+        str: Human readable time
+
+    """
     return time.strftime("%Y-%m-%d %H:%M:%S", time.gmtime(t))
 
 
 class AVResultsProcessor:
+    """Class to process AV results from VirusTotal."""
+
     def __init__(
         self,
         term_blocklist: List[str],
@@ -22,6 +32,7 @@ class AVResultsProcessor:
         sig_safelist: List[str] = [],
         specified_AVs: List[str] = [],
     ):
+        """Initialize the AVResultsProcessor."""
         self.term_blocklist = term_blocklist
         self.revised_sig_score_map = revised_sig_score_map
         self.revised_kw_score_map = revised_kw_score_map
@@ -29,7 +40,13 @@ class AVResultsProcessor:
         self.specified_AVs = specified_AVs
 
     # Create a results section based on AV reports
-    def get_av_results(self, av_report: Dict[str, Any]):
+    def get_av_results(self, av_report: Dict[str, Any]) -> Tuple[ResultSection, ResultSection]:
+        """Create a ResultSection based on AV reports.
+
+        Returns:
+            Tuple[ResultSection, ResultSection]: A ResultSection containing the AV results and no AV results
+
+        """
         # Scans
         av_section = ResultSection("AV Detections as Infected or Suspicious")
         no_AV = defaultdict(list)

@@ -1,3 +1,4 @@
+"""Default configuration values for service."""
 # DEFAULT VALUES: usage should defined from service config
 # # AV Blocklist (ignore results)
 # AV_BLOCKLIST = ["Antiy-AVL", "APEX", "Jiangmin"]

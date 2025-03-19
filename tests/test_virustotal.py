@@ -1,3 +1,5 @@
+"""Run tests for service."""
+
 import os
 import time
 
@@ -17,9 +19,9 @@ service_class = load_module_by_path("virustotal.virustotal.VirusTotal", os.path.
 th = TestHelper(service_class, RESULTS_FOLDER, SAMPLES_FOLDER)
 
 
-#@pytest.mark.parametrize("sample", th.result_list())
 @pytest.mark.parametrize("sample", [])
 def test_sample(sample):
+    """Perform testing against a sample file."""
     start_time = time.time()
     th.run_test_comparison(sample)
     print(f"Time elapsed for {sample}: {round(time.time() - start_time)}s")

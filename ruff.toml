@@ -1,0 +1,9 @@
+line-length = 120
+
+[format]
+docstring-code-format = true
+
+[lint]
+extend-select = ["E501", "D", "DOC"]
+ignore = ["D104", "D203", "D213"]
+preview = true

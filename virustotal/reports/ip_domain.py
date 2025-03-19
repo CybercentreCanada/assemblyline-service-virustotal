@@ -1,3 +1,5 @@
+"""Module for VirusTotal IP/Domain reports."""
+
 import json
 
 from assemblyline.common import forge
@@ -8,7 +10,13 @@ from virustotal.reports.common.processing import format_time_from_epoch
 Classification = forge.get_classification()
 
 
-def v3(doc: dict):
+def v3(doc: dict) -> ResultSection:
+    """Create a ResultSection for a IP/Domain report from VirusTotal API v3.
+
+    Returns:
+        ResultSection: A ResultSection containing the IP/Domain report
+
+    """
     attributes = doc.get("attributes", {})
 
     # Scans
@@ -60,4 +68,5 @@ def v3(doc: dict):
 
 
 def attach_ontology(ontology_helper: None, doc: dict):
+    """Attach the VirusTotal IP/Domain report to the ontology."""
     return
