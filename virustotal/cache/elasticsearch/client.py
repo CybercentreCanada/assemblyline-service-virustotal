@@ -18,7 +18,9 @@ class ElasticClient(CacheClient):
 
     def __init__(self, hosts: List[str], index_aliases: Dict[str, List[str]], apikey: str = None):
         """Intitialize client to interact with Elasticsearch."""
-        self.client = Elasticsearch(hosts=hosts, api_key=apikey, verify_certs=False)
+        self.client = Elasticsearch(
+            hosts=hosts, api_key=apikey, verify_certs=False, max_retries=5, retry_on_timeout=True
+        )
         self.index_aliases = index_aliases
         self.indices = {}
         self.total_docs = 0
