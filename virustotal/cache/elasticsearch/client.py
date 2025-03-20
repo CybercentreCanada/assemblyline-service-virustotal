@@ -37,12 +37,13 @@ class ElasticClient(CacheClient):
         """
         docs_list = []
         for feed, data in collection.items():
-            for d in data:
+            for i, d in enumerate(data):
                 if not HASH_MATCHER.match(d):
                     # Generate the expected document ID
                     d = sha256(d.encode()).hexdigest()
                 # Add a operation to check every index for the document by ID
                 docs_list.extend([{"_id": d, "_index": index} for index in self.indices[feed]])
+                data[i] = d
 
         search_results = []
         if docs_list:
