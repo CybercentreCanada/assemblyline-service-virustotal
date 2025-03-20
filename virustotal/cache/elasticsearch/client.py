@@ -36,14 +36,15 @@ class ElasticClient(CacheClient):
 
         """
         docs_list = []
+        id_map = {}
         for feed, data in collection.items():
-            for i, d in enumerate(data):
+            for d in data:
                 if not HASH_MATCHER.match(d):
                     # Generate the expected document ID
                     d = sha256(d.encode()).hexdigest()
+                id_map.setdefault(feed, []).append(d)
                 # Add a operation to check every index for the document by ID
                 docs_list.extend([{"_id": d, "_index": index} for index in self.indices[feed]])
-                data[i] = d
 
         search_results = []
         if docs_list:
@@ -71,7 +72,7 @@ class ElasticClient(CacheClient):
 
         # Associate reports to ids
         result_manifest = {}
-        for type, id_list in collection.items():
+        for type, id_list in id_map.items():
             indices = self.indices.get(type, [])
             report_list = []
             for id in id_list:
