@@ -68,14 +68,12 @@ class ElasticClient(CacheClient):
             ),
         )
 
-        result_manifest = {}
-
         # Associate reports to ids
         result_manifest = {}
         for type, id_list in id_map.items():
             indices = self.indices.get(type, [])
             report_list = []
-            for id in id_list:
+            for id in set(id_list):
                 for result in search_results:
                     if id == result["_id"] and result["_index"] in indices:
                         report_list.append(result["_source"])

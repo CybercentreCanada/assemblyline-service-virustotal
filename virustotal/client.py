@@ -45,7 +45,8 @@ class VTClient:
             for feed, reports in r.items():
                 for report in reports:
                     # Remove reports from the collection that we've found results for
-                    collection[feed].remove(report["id"])
+                    if report["id"] in collection[feed]:
+                        collection[feed].remove(report["id"])
 
                 # Merge results with the final output
                 results[feed].extend(reports)
