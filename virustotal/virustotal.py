@@ -88,7 +88,7 @@ class VirusTotal(ServiceBase):
         parent_section = ResultSection(f"Extracted {title_insert} by Assemblyline")
         section_titles = list()
         for report in report_list:
-            section = module.v3(report)
+            section = module.v3(report, self.processor)
             if section and section.title_text not in section_titles:
                 section_titles.append(section.title_text)
                 if tag in ["ip", "domain"]:
@@ -96,7 +96,7 @@ class VirusTotal(ServiceBase):
                         # Check to see if URI is a related to the IP/Domain either directly or as a subdomain
                         if host and (host == section.title_text or host.endswith(f".{section.title_text}")):
                             [section.add_tag("network.static.uri", uri) for uri in uris]
-                    parent_section.add_subsection(section)
+                parent_section.add_subsection(section)
                 module.attach_ontology(self.ontology, report)
 
         if tag in ["ip", "domain", "uri"]:
@@ -177,7 +177,7 @@ class VirusTotal(ServiceBase):
         [self.log.info(f"{k} queries: {len(v)}") for k, v in query_collection.items()]
 
         # Execute a bulk search for VirusTotal data
-        result_collection = self.client.bulk_search(query_collection, submit_allowed=dynamic_submit)
+        result_collection = self.client.bulk_search(query_collection, request, submit_allowed=dynamic_submit)
 
         [self.log.info(f"{k} results: {len(v)}") for k, v in result_collection.items()]
 
@@ -204,10 +204,12 @@ class VirusTotal(ServiceBase):
                         if relationship_type:
                             relationship_section = ResultSection(relationship.replace("_", " ").title())
                             for report in self.client.bulk_search(
-                                {relationship_type: [d["id"] for d in data["data"]]}, submit_allowed=dynamic_submit
+                                {relationship_type: [d["id"] for d in data["data"]]},
+                                request,
+                                submit_allowed=dynamic_submit,
                             )[relationship_type]:
                                 tag = "uri" if relationship_type == "url" else relationship_type
-                                relationship_section.add_subsection(TAG_TO_MODULE[tag].v3(report))
+                                relationship_section.add_subsection(TAG_TO_MODULE[tag].v3(report, self.processor))
                             if relationship_section.subsections:
                                 file_result.add_subsection(relationship_section)
 

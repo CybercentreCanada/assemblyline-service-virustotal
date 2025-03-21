@@ -99,7 +99,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
         if info_section.subsections:
             main_section.add_subsection(info_section)
 
-    detections_section = av_processor.get_av_results(attributes["last_analysis_results"])
+    detections_section = av_processor.get_av_results(doc)
     if detections_section.subsections:
         main_section.add_subsection(detections_section)
     return main_section

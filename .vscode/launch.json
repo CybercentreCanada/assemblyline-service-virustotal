@@ -18,15 +18,15 @@
             "justMyCode": false,
         },
         {
-            "name": "[Service] Virustotal - Privileged",
+            "name": "[Service] VirusTotal - Privileged",
             "type": "python",
             "request": "launch",
             "module": "assemblyline_v4_service.run_privileged_service",
             "env": {
                 "SERVICE_MANIFEST_PATH": "service_manifest.yml",
                 "PRIVILEGED": "true",
-                "SERVICE_PATH": "virustotal.virustotal.Virustotal",
-                "TASKING_DIR": "/tmp/Virustotal"
+                "SERVICE_PATH": "virustotal.virustotal.VirusTotal",
+                "TASKING_DIR": "/tmp/VirusTotal"
             },
             "console": "internalConsole",
             "cwd": "${workspaceFolder}",
