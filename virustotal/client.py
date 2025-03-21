@@ -110,5 +110,6 @@ class VTClient:
                     if resp:
                         collection[feed].remove(resp["id"] if resp["type"] != "url" else resp["attributes"]["url"])
                         results.setdefault(feed, []).append(resp)
+                        break
 
         return results

@@ -57,7 +57,8 @@ class AVResultsProcessor:
             av_categories.setdefault(
                 category,
                 ResultTableSection(
-                    f"Detected as: {category.title()}",
+                    f'Detected "{report["id"] if report_type != "url" else report["attributes"]["url"]}"'
+                    f" as: {category.title()}",
                     heuristic=Heuristic(1 if report_type == "file" else 2) if category_score else None,
                     auto_collapse=not category_score,
                 ),
