@@ -68,10 +68,15 @@ submission_params:
 
 heuristics:
   - heur_id: 1
-    name: File is infected
+    name: File Detected
     score: 1000
     filetype: "*"
     description: Antivirus detection found.
+    signature_score_map:
+      harmless: 0
+      undetected: 0
+      suspicious: 300
+      malicious: 1000
 
   - heur_id: 2
     name: Network IOC Detected
@@ -80,9 +85,10 @@ heuristics:
     description: Network IOC detected
     max_score: 1000
     signature_score_map:
-      low: 50
-      medium: 300
-      high: 1000
+      harmless: 0
+      undetected: 0
+      suspicious: 300
+      malicious: 1000
 
   - heur_id: 1000
     name: Capability Found

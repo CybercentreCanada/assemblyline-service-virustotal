@@ -1,12 +1,10 @@
 """Module for processing AV results from VirusTotal."""
 
-import json
 import time
-from collections import defaultdict
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List
 
 from assemblyline.common import forge
-from assemblyline_v4_service.common.result import BODY_FORMAT, Heuristic, ResultSection
+from assemblyline_v4_service.common.result import Heuristic, ResultTableSection, TableRow
 
 Classification = forge.get_classification()
 
@@ -39,74 +37,33 @@ class AVResultsProcessor:
         [self.revised_kw_score_map.update({sig: 0}) for sig in sig_safelist]
         self.specified_AVs = specified_AVs
 
-    # Create a results section based on AV reports
-    def get_av_results(self, av_report: Dict[str, Any]) -> Tuple[ResultSection, ResultSection]:
+    # Create a results section based on VT reports
+    def get_av_results(self, report: Dict[str, Any]) -> ResultTableSection:
         """Create a ResultSection based on AV reports.
 
         Returns:
-            Tuple[ResultSection, ResultSection]: A ResultSection containing the AV results and no AV results
+            ResultTableSection: A ResultTableSection containing the AV reports
 
         """
-        # Scans
-        av_section = ResultSection("AV Detections as Infected or Suspicious")
-        no_AV = defaultdict(list)
-        for av, details in sorted(av_report.items()):
-            result = details["result"]
-            sig = f"{av}.{result}"
-            if result:
-                if any(term in sig for term in self.term_blocklist):
-                    # Term found in signature combination that we wish to block
-                    continue
-
-                if self.specified_AVs and av not in self.specified_AVs:
-                    # We only want results from specific AVs
-                    continue
-
-                av_sub = ResultSection(
-                    f"{av} identified file as {result}",
-                    body=json.dumps(details),
-                    body_format=BODY_FORMAT.KEY_VALUE,
-                    parent=av_section,
-                    classification=Classification.UNRESTRICTED,
-                )
-
-                heur = Heuristic(1)
-                if sig in self.revised_sig_score_map:
-                    heur.add_signature_id(sig, self.revised_sig_score_map[sig])
-                elif any(kw.lower() in sig.lower() for kw in self.revised_kw_score_map):
-                    # Find the kw and apply score
-                    heur.add_signature_id(
-                        sig,
-                        max(
-                            [
-                                self.revised_kw_score_map[kw]
-                                for kw in self.revised_kw_score_map
-                                if kw.lower() in sig.lower()
-                            ]
-                        ),
-                    )
-
-                else:
-                    heur.add_signature_id(sig)
-                av_sub.set_heuristic(heur)
-                av_sub.add_tag("av.virus_name", result)
-            else:
-                category = details.get("category", None)
-                if av in self.term_blocklist:
-                    no_AV["Blocklisted"].append(av)
-                else:
-                    no_AV[category].append(av) if category else None
-
-        no_av_section = (
-            ResultSection(
-                "No Threat Detected by AV Engine(s)",
-                body=json.dumps(no_AV),
-                body_format=BODY_FORMAT.KEY_VALUE,
-                classification=Classification.UNRESTRICTED,
-                auto_collapse=True,
-            )
-            if no_AV
-            else None
+        av_section = ResultTableSection(
+            "Analysis Results",
+            heuristic=Heuristic(
+                1 if report["type"] == "file" else 2, signatures=report["attributes"]["last_analysis_stats"]
+            ),
         )
+        # Create a table of the AV result with null results showing up at the bottom of the table
+        for av_details in sorted(report["attributes"]["last_analysis_results"].values(), key=lambda x: not x["result"]):
+            av = av_details["engine_name"]
+            sig = f"{av}.{av_details['result']}"
+            if any(term in sig for term in self.term_blocklist):
+                # Term found in signature combination that we wish to block
+                continue
 
-        return av_section, no_av_section
+            if self.specified_AVs and av not in self.specified_AVs:
+                # We only want results from specific AVs
+                continue
+
+            av_section.add_row(TableRow({k.replace("_", " ").title(): v for k, v in av_details.items()}))
+            av_section.add_tag("av.virus_name", av_details["result"])
+
+        return av_section
