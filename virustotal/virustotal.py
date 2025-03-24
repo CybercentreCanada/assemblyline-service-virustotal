@@ -234,3 +234,17 @@ class VirusTotal(ServiceBase):
         ]
 
         request.result = result
+
+    def get_tool_version(self) -> str:
+        """Return the version of the VirusTotal results.
+
+        Returns:
+            str: The version of the VirusTotal service based on configuration
+
+        """
+        if not self.client.cache:
+            # If no caching is configured, then return default tool version
+            return super().get_tool_version()
+        else:
+            # Otherwise, return the version based on the cache client
+            return self.client.get_cache_version()

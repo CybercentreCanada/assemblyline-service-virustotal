@@ -22,6 +22,7 @@ class VTClient:
         """Initialize the VirusTotal client."""
         # Only use cached data (ideal for air-gapped systems that can't reach out to VirusTotal)
         self.cache_only = cache_settings.get("cache_only", False)
+        self.cache_interval = cache_settings.get("cache_interval", 3600)
 
         # Initialize VirusTotal client
         if not self.cache_only:
@@ -113,3 +114,15 @@ class VTClient:
                         break
 
         return results
+
+    def get_cache_version(self) -> str:
+        """Get the version of the cache.
+
+        Returns:
+            A string that represents the version of the cache.
+
+        """
+        versions = []
+        for cache in self.cache:
+            versions.append(cache.check_cache(self.cache_interval))
+        return ", ".join(versions)

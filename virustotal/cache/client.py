@@ -6,7 +6,7 @@ from typing import Dict, List
 class CacheClient:
     """Abstract of a client that interacts with a cache of VirusTotal data."""
 
-    def check_cache(self) -> str:
+    def check_cache(self, interval: int) -> str:
         """Invalidate the cache to ensure AL isn't re-using old results unnecessarily."""
         raise NotImplementedError()
 

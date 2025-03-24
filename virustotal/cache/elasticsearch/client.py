@@ -2,6 +2,7 @@
 
 import re
 from hashlib import sha256
+from time import time
 from typing import Dict, List, Optional
 
 from assemblyline.common.isotime import now_as_iso
@@ -24,6 +25,8 @@ class ElasticClient(CacheClient):
         self.index_aliases = index_aliases
         self.indices = {}
         self.total_docs = 0
+        self._cached_version: str = None
+        self._last_cache_check: int = None
 
         # Initialize starting values for client
         self.check_cache()
@@ -81,30 +84,36 @@ class ElasticClient(CacheClient):
             result_manifest[type] = report_list
         return result_manifest
 
-    def check_cache(self) -> Optional[str]:
+    def check_cache(self, interval: int) -> Optional[str]:
         """Check Elasticsearch to see if the number of documents in the cache has changed.
 
         Returns:
             A string that's used to invalidate the result cache.
 
         """
-        # Check all the indices used to calculate caching
-        all_aliases = []
-        for alias in self.index_aliases.values():
-            all_aliases += alias
-        all_aliases = list(set(all_aliases))
+        if self._last_cache_check and time() < self._last_cache_check + interval * 60:
+            return self._cached_version
+        else:
+            # Check all the indices used to calculate caching
+            self._last_cache_check = time()
+            all_aliases = []
+            for alias in self.index_aliases.values():
+                all_aliases += alias
+            all_aliases = list(set(all_aliases))
 
-        total_docs = self.client.indices.stats(index=all_aliases, metric="docs", filter_path="_all.total.docs.count")[
-            "_all"
-        ]["total"]["docs"]["count"]
-        if self.total_docs != total_docs:
-            # DB has changed since last check
+            total_docs = self.client.indices.stats(
+                index=all_aliases, metric="docs", filter_path="_all.total.docs.count"
+            )["_all"]["total"]["docs"]["count"]
+            if self.total_docs != total_docs:
+                # DB has changed since last check
 
-            # Re-calculate the indices that are assigned to each feed
-            for feed, aliases in self.index_aliases.items():
-                self.indices[feed] = list(
-                    set([i["index"] for i in self.client.cat.indices(index=",".join(aliases), format="json")])
-                )
-            # Update the cached value of the total documents stored
-            self.total_docs = total_docs
-            return now_as_iso()
+                # Re-calculate the indices that are assigned to each feed
+                for feed, aliases in self.index_aliases.items():
+                    self.indices[feed] = list(
+                        set([i["index"] for i in self.client.cat.indices(index=",".join(aliases), format="json")])
+                    )
+                # Update the cached value of the total documents stored
+                self.total_docs = total_docs
+                self._cached_version = now_as_iso()
+
+            return self._cached_version

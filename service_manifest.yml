@@ -27,6 +27,7 @@ config:
   allow_dynamic_resubmit: true
   cache:
     cache_only: false
+    cache_interval: 15 # Invalidate cached results after this many minutes
     backends: []
     # - type: elasticsearch
     #   params:
