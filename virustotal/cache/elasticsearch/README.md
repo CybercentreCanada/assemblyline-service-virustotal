@@ -15,6 +15,7 @@ Note: These templates are defined to use an ILM named `virustotal-policy` which 
 When creating your first set of indices per feed, it's recommended to assign an alias and specify if the index in question is the write index. This will help with performing a rollover of indices (whether automatic via ILM or manually triggered) as well as grouping your indices under a single alias which the service will use.
 
 For example, to create an index for the file feed, you can use the following request:
+
 ```
 PUT virustotal_v3_file-000001
 {
@@ -40,18 +41,21 @@ There is also an [example](./ingestion/dag.py) of an Airflow DAG that you can ru
 You'll have to add the list of cache configurations to the `cache` configuration of the service. Specifying the `type` is important so the service knows how to initialize the client to interact with your cache.
 
 For example for Elasticsearch:
+
 ```yaml
-...
 config:
   ...
   cache:
-    - type: elasticsearch
-      params:
-        hosts: ["https://elastic:devpass@localhost:9200"]
-        apikey: null
-        index_aliases:
-          file: ["vt_file"]
-          url: ["vt_url"]
-          ip: ["vt_ip"]
-          domain: ["vt_domain"]
+    cache_only: false
+    cache_interval: 15
+    backends:
+      - type: elasticsearch
+        params:
+          hosts: ["https://elastic:devpass@localhost:9200"]
+          apikey: null
+          index_aliases:
+            file: ["vt_file"]
+            url: ["vt_url"]
+            ip: ["vt_ip"]
+            domain: ["vt_domain"]
 ```
