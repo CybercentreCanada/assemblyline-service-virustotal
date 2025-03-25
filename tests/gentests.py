@@ -1,4 +1,5 @@
 #!/bin/env python
+"""Generate tests for service."""
 import os
 
 from assemblyline.common.importing import load_module_by_path

@@ -1,0 +1,230 @@
+{
+    "template": {
+      "settings": {
+        "index": {
+          "lifecycle": {
+            "name": "virustotal-policy",
+            "rollover_alias": "virustotal_v3_domain"
+          },
+          "routing": {
+            "allocation": {
+              "include": {
+                "_tier_preference": "data_content"
+              }
+            }
+          },
+          "mapping": {
+            "total_fields": {
+              "limit": "10000"
+            }
+          },
+          "number_of_shards": "8",
+          "number_of_replicas": "1"
+        }
+      },
+      "mappings": {
+        "dynamic": "false",
+        "dynamic_templates": [
+          {
+            "index attributes.last_analysis_results": {
+              "path_match": "attributes.last_analysis_results.*",
+              "match_mapping_type": "object",
+              "mapping": {
+                "properties": {
+                  "result": {
+                    "type": "text"
+                  },
+                  "method": {
+                    "type": "text"
+                  },
+                  "engine_name": {
+                    "type": "text"
+                  },
+                  "category": {
+                    "type": "text"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "index attributes.popularity_ranks": {
+              "path_match": "attributes.popularity_ranks.*",
+              "match_mapping_type": "object",
+              "mapping": {
+                "properties": {
+                  "rank": {
+                    "type": "integer"
+                  },
+                  "timestamp": {
+                    "type": "date"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "don't index others": {
+              "path_match": "*",
+              "mapping": {
+                "index": false
+              }
+            }
+          }
+        ],
+        "properties": {
+          "attributes": {
+            "dynamic": "false",
+            "properties": {
+              "categories": {
+                "type": "object",
+                "dynamic": "false"
+              },
+              "creation_date": {
+                "type": "date"
+              },
+              "favicon": {
+                "dynamic": "false",
+                "properties": {
+                  "dhash": {
+                    "type": "text"
+                  },
+                  "raw_md5": {
+                    "type": "text"
+                  }
+                }
+              },
+              "jarm": {
+                "type": "text"
+              },
+              "last_analysis_date": {
+                "type": "date",
+                "format": "epoch_second"
+              },
+              "last_analysis_results": {
+                "type": "object",
+                "dynamic": "false"
+              },
+              "last_analysis_stats": {
+                "dynamic": "false",
+                "properties": {
+                  "harmless": {
+                    "type": "integer"
+                  },
+                  "malicious": {
+                    "type": "integer"
+                  },
+                  "suspicious": {
+                    "type": "integer"
+                  },
+                  "timeout": {
+                    "type": "integer"
+                  },
+                  "undetected": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "last_dns_records": {
+                "type": "nested",
+                "properties": {
+                  "expire": {
+                    "type": "long",
+                    "ignore_malformed": false,
+                    "coerce": true
+                  },
+                  "flag": {
+                    "type": "integer"
+                  },
+                  "minimum": {
+                    "type": "integer"
+                  },
+                  "priority": {
+                    "type": "integer"
+                  },
+                  "refresh": {
+                    "type": "integer"
+                  },
+                  "retry": {
+                    "type": "integer"
+                  },
+                  "rname": {
+                    "type": "text"
+                  },
+                  "serial": {
+                    "type": "long",
+                    "ignore_malformed": false,
+                    "coerce": true
+                  },
+                  "tag": {
+                    "type": "text"
+                  },
+                  "ttl": {
+                    "type": "integer"
+                  },
+                  "type": {
+                    "type": "text"
+                  },
+                  "value": {
+                    "type": "text"
+                  }
+                }
+              },
+              "last_dns_records_date": {
+                "type": "date"
+              },
+              "last_https_certificate_date": {
+                "type": "date"
+              },
+              "last_modification_date": {
+                "type": "date"
+              },
+              "last_update_date": {
+                "type": "date"
+              },
+              "popularity_ranks": {
+                "type": "object",
+                "dynamic": "false"
+              },
+              "registrar": {
+                "type": "text"
+              },
+              "reputation": {
+                "type": "integer"
+              },
+              "tags": {
+                "type": "text"
+              },
+              "total_votes": {
+                "dynamic": "false",
+                "properties": {
+                  "harmless": {
+                    "type": "integer"
+                  },
+                  "malicious": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "whois": {
+                "type": "text"
+              },
+              "whois_date": {
+                "type": "date"
+              }
+            }
+          },
+          "id": {
+            "type": "text"
+          },
+          "links": {
+            "type": "object",
+            "dynamic": "false"
+          }
+        }
+      },
+      "aliases": {
+        "vt_domain": {}
+      }
+    }
+  }

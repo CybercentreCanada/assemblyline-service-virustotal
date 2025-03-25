@@ -1,3 +1,5 @@
+"""Module for parsing sandbox reports from VirusTotal."""
+
 import json
 from collections import defaultdict
 
@@ -64,6 +66,7 @@ SANDBOX_SIGNATURES_REVERSE_LOOKUP = {
 
 
 def get_events(so: OntologyResults, process_tree=[], parent=None, execution_time=0):
+    """Get events from process tree."""
     for process in process_tree:
         ppid = parent.pid if parent else None
         pid = process["process_id"]
@@ -97,7 +100,14 @@ def get_events(so: OntologyResults, process_tree=[], parent=None, execution_time
 
 
 # Modeling output after Cuckoo service
-def v3(doc: dict):
+def v3(doc: dict) -> ResultSection:
+    """Parse the VirusTotal sandbox report.
+
+    Returns:
+        ResultSection.
+
+    """
+
     def get_process_tree(so: OntologyResults, processes_tree=[], parent_section=None, execution_time=0):
         get_events(so, processes_tree, execution_time=execution_time)
 
@@ -224,6 +234,7 @@ def v3(doc: dict):
 
 
 def attach_ontology(ontology_helper: OntologyHelper, doc: dict):
+    """Attach the VirusTotal sandbox report to the ontology."""
     attributes = doc["attributes"]
     so_ontology = {
         "sandbox_name": attributes["sandbox_name"],
@@ -248,5 +259,15 @@ def attach_ontology(ontology_helper: OntologyHelper, doc: dict):
         # VirusTotal didn't provide enough information to create a unique identifier
         if "The objectid needs its required arguments" in str(e):
             pass
+
+    return
+
+    return
+
+    return
+
+    return
+
+    return
 
     return

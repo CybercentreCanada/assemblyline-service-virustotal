@@ -1,0 +1,544 @@
+{
+    "template": {
+      "settings": {
+        "index": {
+          "lifecycle": {
+            "name": "virustotal-policy",
+            "rollover_alias": "virustotal_v3_file"
+          },
+          "routing": {
+            "allocation": {
+              "include": {
+                "_tier_preference": "data_content"
+              }
+            }
+          },
+          "mapping": {
+            "total_fields": {
+              "limit": "10000"
+            }
+          },
+          "number_of_shards": "8",
+          "number_of_replicas": "1"
+        }
+      },
+      "mappings": {
+        "dynamic": "false",
+        "dynamic_templates": [
+          {
+            "index attributes.last_analysis_results": {
+              "path_match": "attributes.last_analysis_results.*",
+              "match_mapping_type": "object",
+              "mapping": {
+                "properties": {
+                  "result": {
+                    "type": "text"
+                  },
+                  "method": {
+                    "type": "text"
+                  },
+                  "engine_name": {
+                    "type": "text"
+                  },
+                  "category": {
+                    "type": "text"
+                  },
+                  "engine_version": {
+                    "type": "text"
+                  },
+                  "engine_update": {
+                    "type": "text"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "index attributes.sandbox_verdicts": {
+              "path_match": "attributes.sandbox_verdicts.*",
+              "match_mapping_type": "object",
+              "mapping": {
+                "properties": {
+                  "malware_names": {
+                    "type": "text"
+                  },
+                  "confidence": {
+                    "type": "integer"
+                  },
+                  "sandbox_name": {
+                    "type": "text"
+                  },
+                  "category": {
+                    "type": "text"
+                  },
+                  "malware_classification": {
+                    "type": "text"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "index attributes.sigma_analysis_summary": {
+              "path_match": "attributes.sigma_analysis_summary.*",
+              "match_mapping_type": "object",
+              "mapping": {
+                "properties": {
+                  "high": {
+                    "type": "integer"
+                  },
+                  "critical": {
+                    "type": "integer"
+                  },
+                  "low": {
+                    "type": "integer"
+                  },
+                  "medium": {
+                    "type": "integer"
+                  }
+                }
+              }
+            }
+          },
+          {
+            "don't index others": {
+              "path_match": "*",
+              "mapping": {
+                "index": false
+              }
+            }
+          }
+        ],
+        "properties": {
+          "attributes": {
+            "dynamic": "false",
+            "properties": {
+              "capabilities_tags": {
+                "type": "text"
+              },
+              "creation_date": {
+                "type": "date"
+              },
+              "crowdsourced_ids_results": {
+                "type": "nested",
+                "properties": {
+                  "alert_context": {
+                    "type": "nested",
+                    "properties": {
+                      "dest_ip": {
+                        "type": "text"
+                      },
+                      "dest_port": {
+                        "type": "integer"
+                      },
+                      "hostname": {
+                        "type": "text"
+                      },
+                      "protocol": {
+                        "type": "text"
+                      },
+                      "src_ip": {
+                        "type": "text"
+                      },
+                      "src_port": {
+                        "type": "integer"
+                      },
+                      "url": {
+                        "type": "text"
+                      }
+                    }
+                  },
+                  "alert_severity": {
+                    "type": "text"
+                  },
+                  "rule_category": {
+                    "type": "text"
+                  },
+                  "rule_id": {
+                    "type": "text"
+                  },
+                  "rule_msg": {
+                    "type": "text"
+                  },
+                  "rule_source": {
+                    "type": "text"
+                  }
+                }
+              },
+              "crowdsourced_ids_stats": {
+                "dynamic": "false",
+                "properties": {
+                  "high": {
+                    "type": "integer"
+                  },
+                  "info": {
+                    "type": "integer"
+                  },
+                  "low": {
+                    "type": "integer"
+                  },
+                  "medium": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "crowdsourced_yara_results": {
+                "type": "nested",
+                "properties": {
+                  "description": {
+                    "type": "text"
+                  },
+                  "match_in_subfile": {
+                    "type": "boolean"
+                  },
+                  "rule_name": {
+                    "type": "text"
+                  },
+                  "ruleset_id": {
+                    "type": "text"
+                  },
+                  "ruleset_name": {
+                    "type": "text"
+                  },
+                  "source": {
+                    "type": "text"
+                  }
+                }
+              },
+              "downloadable": {
+                "type": "boolean"
+              },
+              "first_submission_date": {
+                "type": "date"
+              },
+              "last_analysis_date": {
+                "type": "date",
+                "format": "epoch_second"
+              },
+              "last_analysis_results": {
+                "type": "object",
+                "dynamic": "false"
+              },
+              "last_analysis_stats": {
+                "dynamic": "false",
+                "properties": {
+                  "confirmed-timeout": {
+                    "type": "integer"
+                  },
+                  "failure": {
+                    "type": "integer"
+                  },
+                  "harmless": {
+                    "type": "integer"
+                  },
+                  "malicious": {
+                    "type": "integer"
+                  },
+                  "suspicious": {
+                    "type": "integer"
+                  },
+                  "timeout": {
+                    "type": "integer"
+                  },
+                  "type-unsupported": {
+                    "type": "integer"
+                  },
+                  "undetected": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "last_modification_date": {
+                "type": "date"
+              },
+              "last_submission_date": {
+                "type": "date"
+              },
+              "md5": {
+                "type": "text"
+              },
+              "meaningful_name": {
+                "type": "text"
+              },
+              "names": {
+                "type": "text"
+              },
+              "pe_info": {
+                "dynamic": "false",
+                "properties": {
+                  "debug": {
+                    "type": "nested",
+                    "properties": {
+                      "codeview": {
+                        "dynamic": "false",
+                        "properties": {
+                          "age": {
+                            "type": "long"
+                          },
+                          "guid": {
+                            "type": "text"
+                          },
+                          "name": {
+                            "type": "text"
+                          },
+                          "offset": {
+                            "type": "long"
+                          },
+                          "signature": {
+                            "type": "text"
+                          },
+                          "timestamp": {
+                            "type": "text"
+                          }
+                        }
+                      },
+                      "fpo": {
+                        "dynamic": "false",
+                        "properties": {
+                          "functions": {
+                            "type": "long"
+                          }
+                        }
+                      },
+                      "misc": {
+                        "dynamic": "false",
+                        "properties": {
+                          "data": {
+                            "type": "text"
+                          },
+                          "datatype": {
+                            "type": "long"
+                          },
+                          "length": {
+                            "type": "long"
+                          },
+                          "reserved": {
+                            "type": "text"
+                          },
+                          "unicode": {
+                            "type": "long"
+                          }
+                        }
+                      },
+                      "offset": {
+                        "type": "long"
+                      },
+                      "reserved10": {
+                        "dynamic": "false",
+                        "properties": {
+                          "value": {
+                            "type": "text"
+                          }
+                        }
+                      },
+                      "size": {
+                        "type": "long"
+                      },
+                      "timedatestamp": {
+                        "type": "date"
+                      },
+                      "type": {
+                        "type": "long"
+                      },
+                      "type_str": {
+                        "type": "text"
+                      }
+                    }
+                  },
+                  "entry_point": {
+                    "type": "long",
+                    "ignore_malformed": true,
+                    "coerce": true
+                  },
+                  "exports": {
+                    "type": "text"
+                  },
+                  "imphash": {
+                    "type": "text"
+                  },
+                  "import_list": {
+                    "type": "nested",
+                    "properties": {
+                      "imported_functions": {
+                        "type": "text"
+                      },
+                      "library_name": {
+                        "type": "text"
+                      }
+                    }
+                  },
+                  "machine_type": {
+                    "type": "long",
+                    "ignore_malformed": true,
+                    "coerce": true
+                  },
+                  "overlay": {
+                    "dynamic": "false",
+                    "properties": {
+                      "chi2": {
+                        "type": "text"
+                      },
+                      "entropy": {
+                        "type": "text"
+                      },
+                      "filetype": {
+                        "type": "text"
+                      },
+                      "md5": {
+                        "type": "text"
+                      },
+                      "offset": {
+                        "type": "long"
+                      },
+                      "size": {
+                        "type": "long"
+                      }
+                    }
+                  },
+                  "resource_details": {
+                    "type": "nested",
+                    "properties": {
+                      "chi2": {
+                        "type": "text"
+                      },
+                      "entropy": {
+                        "type": "text"
+                      },
+                      "filetype": {
+                        "type": "text"
+                      },
+                      "lang": {
+                        "type": "text"
+                      },
+                      "sha256": {
+                        "type": "text"
+                      },
+                      "type": {
+                        "type": "text"
+                      }
+                    }
+                  },
+                  "resource_langs": {
+                    "type": "object",
+                    "dynamic": "false"
+                  },
+                  "resource_types": {
+                    "type": "flattened"
+                  },
+                  "rich_pe_header_hash": {
+                    "type": "text"
+                  },
+                  "sections": {
+                    "type": "nested",
+                    "properties": {
+                      "entropy": {
+                        "type": "text"
+                      },
+                      "md5": {
+                        "type": "text"
+                      },
+                      "name": {
+                        "type": "text"
+                      },
+                      "raw_size": {
+                        "type": "long"
+                      },
+                      "virtual_address": {
+                        "type": "long"
+                      },
+                      "virtual_size": {
+                        "type": "long"
+                      }
+                    }
+                  },
+                  "timestamp": {
+                    "type": "date",
+                    "ignore_malformed": true
+                  }
+                }
+              },
+              "reputation": {
+                "type": "integer"
+              },
+              "sandbox_verdicts": {
+                "type": "object",
+                "dynamic": "false"
+              },
+              "sha1": {
+                "type": "text"
+              },
+              "sha256": {
+                "type": "text"
+              },
+              "sigma_analysis_stats": {
+                "dynamic": "false",
+                "properties": {
+                  "critical": {
+                    "type": "integer"
+                  },
+                  "high": {
+                    "type": "integer"
+                  },
+                  "low": {
+                    "type": "integer"
+                  },
+                  "medium": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "sigma_analysis_summary": {
+                "type": "object",
+                "dynamic": "false"
+              },
+              "size": {
+                "type": "integer"
+              },
+              "tags": {
+                "type": "text"
+              },
+              "times_submitted": {
+                "type": "integer"
+              },
+              "total_votes": {
+                "dynamic": "false",
+                "properties": {
+                  "harmless": {
+                    "type": "integer"
+                  },
+                  "malicious": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "type_description": {
+                "type": "text"
+              },
+              "type_extension": {
+                "type": "text"
+              },
+              "type_tag": {
+                "type": "text"
+              },
+              "unique_sources": {
+                "type": "integer"
+              },
+              "vhash": {
+                "type": "text"
+              }
+            }
+          },
+          "id": {
+            "type": "text"
+          },
+          "links": {
+            "type": "object",
+            "dynamic": "false"
+          }
+        }
+      },
+      "aliases": {
+        "vt_file": {}
+      }
+    }
+  }

@@ -1,41 +1,38 @@
-import os
-import time
-from base64 import b64encode
-from copy import deepcopy
+"""Assemblyline service for VirusTotal."""
 
+import re
+from urllib.parse import urlparse
+
+from assemblyline.odm.base import IP_ONLY_REGEX
+from assemblyline_v4_service.common.api import ServiceAPIError
 from assemblyline_v4_service.common.base import ServiceBase
 from assemblyline_v4_service.common.request import ServiceRequest
-from assemblyline_v4_service.common.result import BODY_FORMAT, Result, ResultSection
-from vt import APIError, Client
+from assemblyline_v4_service.common.result import Result, ResultSection
 
-from virustotal.reports.behaviour import attach_ontology as append_sandbox_ontology
-from virustotal.reports.behaviour import v3 as parse_sandbox_report
+import virustotal.reports.behaviour as behaviour_analysis
+import virustotal.reports.file as file_analysis
+import virustotal.reports.ip_domain as ip_domain_analysis
+import virustotal.reports.url as url_analysis
+from virustotal.client import VTClient
 from virustotal.reports.common.processing import AVResultsProcessor
-from virustotal.reports.file import attach_ontology as append_file_ontology
-from virustotal.reports.file import v3 as parse_file_report
-from virustotal.reports.ip_domain import v3 as parse_network_report
-from virustotal.reports.url import v3 as parse_url_report
 
-MAX_RETRY = 3
-
-
-def get_tag_values(section: ResultSection):
-    values = []
-    for v in section.tags.values():
-        values.extend(v)
-
-    for s in section.subsections:
-        values.extend(get_tag_values(s))
-
-    return values
+TAG_TO_MODULE = {
+    "ip": ip_domain_analysis,
+    "domain": ip_domain_analysis,
+    "uri": url_analysis,
+    "behaviour": behaviour_analysis,
+}
 
 
 class VirusTotal(ServiceBase):
+    """Assemblyline service for VirusTotal."""
+
     def __init__(self, config=None):
+        """Initialize the VirusTotal service."""
         super(VirusTotal, self).__init__(config)
         self.client = None
         self.safelist_interface = self.get_api_interface().get_safelist
-        self.allow_dynamic_resubmit = self.config.get("allow_dynamic_resubmit")
+        self.allow_dynamic_resubmit = self.config.get("allow_dynamic_resubmit", False)
 
         sig_safelist = []
         [
@@ -50,203 +47,204 @@ class VirusTotal(ServiceBase):
             self.config["av_config"]["specific_AVs"],
         )
 
+        # Instantiate safelist(s)
+        try:
+            safelist = self.safelist_interface(
+                [
+                    "network.static.uri",
+                    "network.dynamic.uri",
+                    "network.static.domain",
+                    "network.dynamic.domain",
+                    "network.static.ip",
+                    "network.dynamic.ip",
+                ]
+            )
+            regex_list = []
+            self.safelist_match = []
+
+            # Extend with safelisted matches
+            [self.safelist_match.extend(match_list) for _, match_list in safelist.get("match", {}).items()]
+
+            # Extend with safelisted regex
+            [regex_list.extend(regex_) for _, regex_ in safelist.get("regex", {}).items()]
+
+            self.safelist_regex = re.compile("|".join(regex_list))
+
+        except ServiceAPIError as e:
+            self.log.warning(f"Couldn't retrieve safelist from service server: {e}. Continuing without it..")
+
     def start(self):
+        """Start the VirusTotal service."""
         self.log.debug("VirusTotal service started")
 
-    def execute(self, request: ServiceRequest):
-        # Ensure we can actually create a client connection
-        try:
-            # Submitter's API key should be used first, global is a fallback if configured
-            self.client = Client(
-                apikey=request.get_param("api_key") or self.config.get("api_key"),
-                proxy=self.config.get("proxy") or None,
-                host=self.config.get("host") or None,
+    def get_results(self, report_list, tag, title_insert, host_uri_map={}) -> ResultSection:
+        """Create a ResultSection for the given report list.
+
+        Returns:
+            ResultSection: A ResultSection containing the VirusTotal results
+
+        """
+        module = TAG_TO_MODULE[tag]
+        parent_section = ResultSection(f"Extracted {title_insert} by Assemblyline")
+        section_titles = list()
+        for report in report_list:
+            section = module.v3(report, self.processor)
+            if section and section.title_text not in section_titles:
+                section_titles.append(section.title_text)
+                if tag in ["ip", "domain"]:
+                    for host, uris in host_uri_map.items():
+                        # Check to see if URI is a related to the IP/Domain either directly or as a subdomain
+                        if host and (host == section.title_text or host.endswith(f".{section.title_text}")):
+                            [section.add_tag("network.static.uri", uri) for uri in uris]
+                parent_section.add_subsection(section)
+                module.attach_ontology(self.ontology, report)
+
+        if tag in ["ip", "domain", "uri"]:
+            # Reorganize sections so that scoring sections are first and non-scoring are last and collapsed
+            sorted_sections = []
+            for section in parent_section.subsections:
+                if not section.heuristic:
+                    # Auto collapse sections where a heuristic wasn't raised
+                    section.auto_collapse = True
+                    sorted_sections.append(section)
+                else:
+                    # Add scored section to the beginning of the list
+                    sorted_sections.insert(0, section)
+            # Sort sections by score
+            sorted_sections = sorted(
+                sorted_sections, key=lambda x: x.heuristic.score if x.heuristic else 0, reverse=True
             )
-        except ValueError as e:
-            self.log.error("No API key found for VirusTotal")
-            raise e
+
+            parent_section._subsections = sorted_sections
+
+        return parent_section
+
+    def execute(self, request: ServiceRequest):
+        """Execute the VirusTotal service."""
+        # Initialize VirusTotal client along with cache clients, if configured
+        self.client = VTClient(
+            vt_client_kwargs={
+                "apikey": request.get_param("api_key") or self.config.get("api_key"),
+                "proxy": self.config.get("proxy") or None,
+                "host": self.config.get("host") or None,
+            },
+            cache_settings=self.config.get("cache", {}),
+        )
+
+        # Maintain a record of items that you want to query
+        query_collection = {"file": [], "url": [], "ip": [], "domain": []}
+
+        if request.file_type.startswith("uri/"):
+            # URI files only
+            query_collection["url"].append(request.task.fileinfo.uri_info.uri)
+            if re.match(IP_ONLY_REGEX, request.task.fileinfo.uri_info.hostname):
+                query_collection["ip"].append(request.task.fileinfo.uri_info.hostname)
+            else:
+                query_collection["domain"].append(request.task.fileinfo.uri_info.hostname)
+        else:
+            # Otherwise looks for files based on the SHA256
+            query_collection["file"] = [request.sha256]
 
         result = Result()
-        scan_url = bool(request.task.metadata.get("submitted_url", None) and request.task.depth == 0)
         dynamic_submit = request.get_param("dynamic_submit") and self.allow_dynamic_resubmit
-        response = None
-        if scan_url and not request.get_param("ignore_submitted_url"):
-            submitted_url = request.task.metadata["submitted_url"]
-            response = self.common_scan(
-                type="url",
-                sample=submitted_url,
-                id=b64encode(submitted_url.encode()).decode(),
-                dynamic_submit=dynamic_submit,
-            )
-        else:
-            relationships = request.get_param("relationships")
-            if (
-                request.get_param("download_evtx") or request.get_param("download_pcap")
-            ) and "behaviours" not in relationships:
-                # Requesting to download Sandbox files but relationship wasn't specified in request
-                relationships += ",behaviours"
 
-            response = self.common_scan(
-                type="file",
-                sample=open(request.file_path, "rb"),
-                # ID with relationship params
-                id=f"{request.sha256}?relationships={relationships}",
-                dynamic_submit=dynamic_submit,
-            )
+        if request.get_param("exhaustive_search"):
+            # Search for all tags associated to the file task and add it to the query collection
+            for k, v in request.task.tags.items():
+                if "uri" in k and v not in query_collection["url"]:
+                    query_collection["url"].extend(v)
+                elif "domain" in k and v not in query_collection["domain"]:
+                    query_collection["domain"].extend(v)
+                elif "ip" in k and v not in query_collection["ip"]:
+                    query_collection["ip"].extend(v)
 
-        result_section = self.analyze_response(response, request)
+            # Remove duplicates
+            for ioc in ["url", "ip", "domain"]:
+                query_collection[ioc] = list(set(query_collection[ioc]))
 
-        if result_section:
-            # Add tagging for dynamic IOCs into URL report sections
-            if request.get_param("analyze_relationship"):
-                for section in result_section.subsections:
-                    if section.title_text == "Related Objects":
-                        behavior_section = [
-                            relation_section
-                            for relation_section in section.subsections
-                            if relation_section.title_text == "Behaviours"
-                        ]
-                        if not behavior_section:
-                            break
-                        dynamic_iocs = get_tag_values(behavior_section[0])
-                        for relation_section in section.subsections:
-                            if relation_section.title_text == "Behaviours":
-                                continue
+            # Pre-filter network IOCs based on AL safelist
+            if self.safelist_regex or self.safelist_match:
 
-                            for subsection in relation_section.subsections:
-                                tags = deepcopy(subsection.tags)
-                                for k, v in tags.items():
-                                    [
-                                        subsection.add_tag(k.replace("static", "dynamic"), ioc)
-                                        for ioc in v
-                                        if ioc in dynamic_iocs
-                                    ]
+                def filter_items(x_list: list):
+                    regex_matches = list(filter(self.safelist_regex.match, x_list))
+                    # Remove on regex and exact matches
+                    [x_list.remove(match_item) for match_item in regex_matches]
+                    [x_list.remove(x) for x in x_list if any(match_item in x for match_item in self.safelist_match)]
 
-            result.add_section(result_section)
+                for ioc in ["url", "ip", "domain"]:
+                    filter_items(query_collection[ioc])
+
+        [self.log.info(f"{k} queries: {len(v)}") for k, v in query_collection.items()]
+
+        # Execute a bulk search for VirusTotal data
+        result_collection = self.client.bulk_search(query_collection, request, submit_allowed=dynamic_submit)
+
+        [self.log.info(f"{k} results: {len(v)}") for k, v in result_collection.items()]
+
+        # Create ResultSections
+        for file_report in result_collection["file"]:
+            try:
+                file_result = file_analysis.v3(file_report, request.file_name, self.processor)
+                if request.get_param("exhaustive_search"):
+                    # Extract relational IOCs from the file report and perform a lookup
+                    for relationship, data in file_report.get("relationships", {}).items():
+                        if not data.get("data", []):
+                            # Skip if no data to create a subsection from
+                            continue
+
+                        relationship_type = None
+                        if "url" in relationship:
+                            relationship_type = "url"
+                        elif "ip" in relationship:
+                            relationship_type = "ip"
+                        elif "domain" in relationship:
+                            relationship_type = "domain"
+
+                        # Create a subsection for each relationship type
+                        if relationship_type:
+                            relationship_section = ResultSection(relationship.replace("_", " ").title())
+                            for report in self.client.bulk_search(
+                                {relationship_type: [d["id"] for d in data["data"]]},
+                                request,
+                                submit_allowed=dynamic_submit,
+                            )[relationship_type]:
+                                tag = "uri" if relationship_type == "url" else relationship_type
+                                relationship_section.add_subsection(TAG_TO_MODULE[tag].v3(report, self.processor))
+                            if relationship_section.subsections:
+                                file_result.add_subsection(relationship_section)
+
+                result.add_section(file_result)
+                file_analysis.attach_ontology(self.ontology, file_report)
+            except Exception as e:
+                self.log.error(f"Problem producing {file_report['id']} file report: {e}")
+
+        # Create a map of the domains/IPs and the URIs they're associated to for tagging purposes
+        host_uri_map = dict()
+        for uri in query_collection["url"]:
+            host_uri_map.setdefault(urlparse(uri).hostname, []).append(uri)
+
+        [
+            result.add_section(section)
+            for section in [
+                self.get_results(result_collection["url"], "uri", "URLs"),
+                self.get_results(result_collection["ip"], "ip", "IPs", host_uri_map),
+                self.get_results(result_collection["domain"], "domain", "Domains", host_uri_map),
+            ]
+            if section.subsections
+        ]
 
         request.result = result
 
-    def analyze_response(self, response: dict, request: ServiceRequest):
-        if not response:
-            return
-        elif response.get("error", {}).get("code") == "NotFoundError":
-            return
+    def get_tool_version(self) -> str:
+        """Return the version of the VirusTotal results.
 
-        def download_sandbox_files():
-            sandbox_name = response["attributes"]["sandbox_name"]
-            id = response["id"]
-            for downloadable_file in ["evtx", "pcap"]:
-                if request.get_param(f"download_{downloadable_file}") and response["attributes"].get(
-                    f"has_{downloadable_file}"
-                ):
-                    self.log.info(f"Downloading {downloadable_file} from {sandbox_name}")
-                    # Download file and append for other services to analyze
-                    fn = f"{id}_{downloadable_file}"
-                    dest_path = os.path.join(self.working_directory, fn)
-                    with open(dest_path, "wb") as fh:
-                        fh.write(self.client.get(f"/file_behaviours/{id}/{downloadable_file}").read())
-                    request.add_extracted(dest_path, fn, description=f"{downloadable_file.upper()} from {sandbox_name}")
+        Returns:
+            str: The version of the VirusTotal service based on configuration
 
-        report_type = response["type"]
-        result_section = None
-        if report_type == "file":
-            result_section = parse_file_report(response, request.file_name, self.processor)
-            append_file_ontology(self.ontology, response)
-
-            # Get as much information as we can about other related objects (entails more API requests)
-            relationships_section = ResultSection("Related Objects", parent=result_section, auto_collapse=True)
-            if request.get_param("analyze_relationship"):
-                # Only concerned with relationships that contain content (minimize API calls needed)
-                for relationship in [k for k, v in response.get("relationships", {}).items() if v.get("data")]:
-                    # Create a pretty title text for the section
-                    title_text = (
-                        relationship.title()
-                        .replace("_", " ")
-                        .replace("Ip", "IP")
-                        .replace("Url", "URL")
-                        .replace("Itw", "ITW")
-                    )
-                    interim_section = ResultSection(title_text=title_text, parent=relationships_section)
-                    for analysis in self.client.get_json(f"/files/{request.sha256}/{relationship}?limit=40")["data"]:
-                        subsection = self.analyze_response(analysis, request)
-                        if subsection:
-                            interim_section.add_subsection(subsection)
-            else:
-                # Create a section that tags known relationships but don't assess them for scoring purposes
-                for relationship, data in response.get("relationships", {}).items():
-                    data = data["data"]
-                    if not data:
-                        continue
-                    # Create a pretty title text for the section
-                    title_text = (
-                        relationship.title()
-                        .replace("_", " ")
-                        .replace("Ip", "IP")
-                        .replace("Url", "URL")
-                        .replace("Itw", "ITW")
-                    )
-                    body = [d["id"] for d in data]
-                    tag_type = data[0]["type"] if data[0]["type"] != "ip_address" else "ip"
-                    tags = {}
-                    if tag_type != "file_behaviour":
-                        tags[f"network.static.{tag_type}"] = body
-                    else:
-                        # Place holder in case we want to fetch sandbox files
-                        continue
-
-                    interim_section = ResultSection(
-                        title_text=title_text,
-                        body=", ".join(body),
-                        body_format=BODY_FORMAT.TEXT,
-                        parent=relationships_section,
-                        tags=tags,
-                        auto_collapse=True,
-                    )
-
-        elif report_type == "url":
-            result_section = parse_url_report(response)
-        elif report_type in ["domain", "ip_address"]:
-            result_section = parse_network_report(response)
-        elif report_type == "file_behaviour":
-            result_section = parse_sandbox_report(response)
-            append_sandbox_ontology(self.ontology, response)
-            download_sandbox_files()
-
-        return result_section
-
-    def common_scan(self, type: str, sample, id, dynamic_submit):
-        try:
-            # Sample already submitted to VT, return existing report
-            return self.client.get_json(f"/{type}s/{id}")["data"]
-        except APIError as e:
-            if e.code == "NotFoundError":
-                # Sample not known to VT, proceed with submitting to VT if allowed
-                pass
-            else:
-                # Raise Exception for unknown handling to be fixed later
-                raise e
-
-        def submit(retry_attempt: int = 0):
-            # Submit sample to VT for analysis
-            json_response = None
-            if retry_attempt < MAX_RETRY:
-                try:
-                    if type == "file":
-                        json_response = self.client.scan_file(sample, wait_for_completion=True).to_dict()
-                    else:
-                        json_response = self.client.scan_url(sample, wait_for_completion=True).to_dict()
-                except APIError as e:
-                    if "NotFoundError" in e.code:
-                        self.log.warning(f"VirusTotal has nothing on this {type}.")
-                    elif "QuotaExceededError" in e.code:
-                        self.log.warning("Quota Exceeded. Trying again in 60s.")
-                        time.sleep(60)
-                        retry_attempt += 1
-                        return submit(retry_attempt)
-                    else:
-                        self.log.error(e)
-            return json_response
-
-        # Only submit to VT if requested by the submitter
-        if dynamic_submit:
-            return submit()
+        """
+        if not (self.client and self.client.cache):
+            # If no caching is configured, then return default tool version
+            return super().get_tool_version()
+        else:
+            # Otherwise, return the version based on the cache client
+            return self.client.get_cache_version()

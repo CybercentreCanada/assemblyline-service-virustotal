@@ -1,3 +1,5 @@
+"""Module for processing file reports from VirusTotal API v3."""
+
 import json
 
 from assemblyline.common import forge
@@ -11,7 +13,13 @@ from virustotal.reports.common.processing import AVResultsProcessor, format_time
 Classification = forge.get_classification()
 
 
-def v3(doc, file_name, av_processor: AVResultsProcessor):
+def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
+    """Create a ResultSection for a file report from VirusTotal API v3.
+
+    Returns:
+        ResultSection: A ResultSection containing the file report
+
+    """
     attributes = doc.get("attributes", {})
     context = doc.get("context_attributes", {})
 
@@ -22,7 +30,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
             heuristic.add_attack_id(CAPABILITY_LOOKUP[c])
 
     main_section = ResultSection(
-        f'{attributes.get("meaningful_name", file_name)}',
+        f"{attributes.get('meaningful_name', file_name)}",
         heuristic=heuristic,
         classification=Classification.UNRESTRICTED,
         tags={"file.name.extracted": attributes.get("names", [])},
@@ -57,7 +65,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
 
     # *_info Section
     info_found = any("_info" in k for k in attributes.keys()) or any(
-        [attributes.get(x) for x in ["crowdsourced_yara_results", "crowdsourced_ai_results"]]
+        [attributes.get(x) for x in ["crowdsourced_yara_results", "crowdsourced_ai_results", "malware_config"]]
     )
     if info_found:
         info_section = ResultSection("Info Section", auto_collapse=True)
@@ -76,7 +84,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
             elif "crowdsourced_ai_results" in k:
                 [
                     ResultSection(
-                        title_text=f'Code Insight by {s["source"]}',
+                        title_text=f"Code Insight by {s['source']}",
                         body=s["analysis"],
                         heuristic=Heuristic(1001),
                         auto_collapse=True,
@@ -84,21 +92,21 @@ def v3(doc, file_name, av_processor: AVResultsProcessor):
                     )
                     for s in v
                 ]
+            elif "malware_config" in k:
+                # Malware Config
+                info_section.add_subsection(info.malware_config_section(attributes["malware_config"]))
+
         if info_section.subsections:
             main_section.add_subsection(info_section)
 
-    # Malware Config
-    if attributes.get("malware_config"):
-        info_section.add_subsection(info.malware_config_section(attributes["malware_config"]))
-
-    infected_section, no_av_section = av_processor.get_av_results(attributes["last_analysis_results"])
-    if infected_section.subsections:
-        main_section.add_subsection(infected_section)
-        main_section.add_subsection(no_av_section)
+    detections_section = av_processor.get_av_results(doc)
+    if detections_section.subsections:
+        main_section.add_subsection(detections_section)
     return main_section
 
 
 def attach_ontology(ontology_helper: None, doc: dict):
+    """Attach the ontology of the VirusTotal file report."""
     av_results = doc["attributes"]["last_analysis_results"]
     for details in av_results.values():
         result = details["result"]
