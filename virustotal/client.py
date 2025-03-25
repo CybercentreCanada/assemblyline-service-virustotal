@@ -22,7 +22,7 @@ class VTClient:
         """Initialize the VirusTotal client."""
         # Only use cached data (ideal for air-gapped systems that can't reach out to VirusTotal)
         self.cache_only = cache_settings.get("cache_only", False)
-        self.cache_interval = cache_settings.get("cache_interval", 3600)
+        self.cache_interval = cache_settings.get("cache_interval", 15)
 
         # Initialize VirusTotal client
         if not self.cache_only:
@@ -33,7 +33,9 @@ class VTClient:
         for settings in cache_settings.get("backends", []):
             if settings["type"] == "elasticsearch":
                 # Initialize a client that interacts with Elasticsearch
-                self.cache.append(ElasticClient(**settings["params"]))
+                client = ElasticClient(**settings["params"])
+                client.check_cache(self.cache_interval)
+                self.cache.append(client)
 
     def bulk_search(
         self, collection: Dict[str, List[str]], request: ServiceRequest, submit_allowed: bool = False

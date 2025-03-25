@@ -28,9 +28,6 @@ class ElasticClient(CacheClient):
         self._cached_version: str = None
         self._last_cache_check: int = None
 
-        # Initialize starting values for client
-        self.check_cache()
-
     def bulk_search(self, collection: Dict[str, List[str]]) -> Dict[str, List[Dict]]:
         """Perform an MGET search against Elasticsearch to find all the VirusTotal reports in the collection.
 

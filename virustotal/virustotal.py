@@ -242,7 +242,7 @@ class VirusTotal(ServiceBase):
             str: The version of the VirusTotal service based on configuration
 
         """
-        if not self.client.cache:
+        if not (self.client and self.client.cache):
             # If no caching is configured, then return default tool version
             return super().get_tool_version()
         else:
