@@ -2,6 +2,7 @@
 
 import base64
 import time
+from io import BytesIO
 from typing import Any, Dict, List
 
 from assemblyline_v4_service.common.request import ServiceRequest
@@ -85,7 +86,7 @@ class VTClient:
                                 try:
                                     if feed == "file":
                                         resp = self.vt.scan_file(
-                                            request.file_contents, wait_for_completion=True
+                                            BytesIO(request.file_contents), wait_for_completion=True
                                         ).to_dict()
                                     elif feed == "url":
                                         resp = self.vt.scan_url(d, wait_for_completion=True).to_dict()
