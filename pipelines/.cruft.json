@@ -1,6 +1,6 @@
 {
   "template": "https://github.com/CybercentreCanada/assemblyline-service-pipeline-generator.git",
-  "commit": "eb41868283c10b1a31746ebfd29b2c0e32c26025",
+  "commit": "95751c6b98bddacab4a85d01110d85dd3b9bdcc2",
   "checkout": null,
   "context": {
     "cookiecutter": {
@@ -14,7 +14,8 @@
       "_extensions": [
         "local_extensions.extract_versions"
       ],
-      "_template": "https://github.com/CybercentreCanada/assemblyline-service-pipeline-generator.git"
+      "_template": "https://github.com/CybercentreCanada/assemblyline-service-pipeline-generator.git",
+      "_commit": "95751c6b98bddacab4a85d01110d85dd3b9bdcc2"
     }
   },
   "directory": null
