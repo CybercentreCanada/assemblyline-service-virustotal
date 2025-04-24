@@ -69,7 +69,6 @@ class AVResultsProcessor:
                 ResultTableSection(
                     f'Detected "{report["id"] if report_type != "url" else report["attributes"]["url"]}"'
                     f" as: {category.title()}",
-                    heuristic=heuristic,
                     auto_collapse=not category_score,
                 ),
             )
@@ -99,6 +98,10 @@ class AVResultsProcessor:
                     f"network.static.{report_type if report_type != 'url' else 'uri'}",
                     report["attributes"].get("url", report["id"]),
                 )
+
+            if not category_section.heuristic and heuristic:
+                # Assign the heuristic to the section if it was not already assigned
+                category_section.heuristic = heuristic
 
             # Only add signatures to the heuristic if they have a score
             if category_section.heuristic:
