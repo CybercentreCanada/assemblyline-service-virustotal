@@ -101,7 +101,7 @@ class AVResultsProcessor:
 
             if not category_section.heuristic and heuristic:
                 # Assign the heuristic to the section if it was not already assigned
-                category_section.heuristic = heuristic
+                category_section.set_heuristic(heuristic)
 
             # Only add signatures to the heuristic if they have a score
             if category_section.heuristic:
