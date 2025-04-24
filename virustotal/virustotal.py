@@ -45,6 +45,7 @@ class VirusTotal(ServiceBase):
             self.config["av_config"]["revised_kw_score_map"],
             sig_safelist,
             self.config["av_config"]["specific_AVs"],
+            self.config["av_config"]["hit_threshold"],
         )
 
         # Instantiate safelist(s)

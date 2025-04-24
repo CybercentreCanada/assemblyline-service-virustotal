@@ -52,6 +52,7 @@ config:
     revised_kw_score_map: # Remap scoring based on keyword in an AV result
       adware: 100
     specific_AVs: [] # Used to target certain AV results only, ignore others
+    hit_threshold: 2 # Minimum number of hits to trigger heuristic
 
 submission_params:
   - default: ""

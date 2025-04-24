@@ -31,6 +31,7 @@ class AVResultsProcessor:
         revised_kw_score_map: Dict[str, int],
         sig_safelist: List[str] = [],
         specified_AVs: List[str] = [],
+        hit_threshold: int = 0,
     ):
         """Initialize the AVResultsProcessor."""
         self.term_blocklist = term_blocklist
@@ -38,6 +39,7 @@ class AVResultsProcessor:
         self.revised_kw_score_map = revised_kw_score_map
         [self.revised_kw_score_map.update({sig: 0}) for sig in sig_safelist]
         self.specified_AVs = specified_AVs
+        self.hit_threshold = hit_threshold
 
     # Create a results section based on VT reports
     def get_av_results(self, report: Dict[str, Any]) -> ResultTableSection:
@@ -54,12 +56,20 @@ class AVResultsProcessor:
         for av_details in report["attributes"]["last_analysis_results"].values():
             category = av_details["category"]
             category_score = CATEGORY_SCORING.get(category, 0)
+            analysis_stats = report["attributes"]["last_analysis_stats"]
+
+            # Only raise the heurstic if the number of malicious and suspicious results is above the threshold
+            raise_heuristic = (
+                analysis_stats.get("malicious", 0) + analysis_stats.get("suspicious", 0) > self.hit_threshold
+            )
+            heuristic = Heuristic(1 if report_type == "file" else 2) if raise_heuristic and category_score else None
+
             av_categories.setdefault(
                 category,
                 ResultTableSection(
                     f'Detected "{report["id"] if report_type != "url" else report["attributes"]["url"]}"'
                     f" as: {category.title()}",
-                    heuristic=Heuristic(1 if report_type == "file" else 2) if category_score else None,
+                    heuristic=heuristic,
                     auto_collapse=not category_score,
                 ),
             )
