@@ -85,9 +85,8 @@ class VTClient:
                                 # VirusTotal only support submitting files and URLs for scanning
                                 try:
                                     if feed == "file":
-                                        resp = self.vt.scan_file(
-                                            BytesIO(request.file_contents), wait_for_completion=True
-                                        ).to_dict()
+                                        with open(request.file_path, "rb") as f:
+                                            resp = self.vt.scan_file(f, wait_for_completion=True).to_dict()
                                     elif feed == "url":
                                         resp = self.vt.scan_url(d, wait_for_completion=True).to_dict()
                                 except APIError as submit_error:
