@@ -42,7 +42,7 @@ class AVResultsProcessor:
         self.hit_threshold = hit_threshold
 
     # Create a results section based on VT reports
-    def get_av_results(self, report: Dict[str, Any]) -> ResultTableSection:
+    def get_av_results(self, report: Dict[str, Any]) -> ResultSection:
         """Create a ResultSection based on AV reports.
 
         Returns:
