@@ -2,7 +2,6 @@
 
 import base64
 import time
-from io import BytesIO
 from typing import Any, Dict, List
 
 from assemblyline_v4_service.common.request import ServiceRequest
@@ -85,9 +84,8 @@ class VTClient:
                                 # VirusTotal only support submitting files and URLs for scanning
                                 try:
                                     if feed == "file":
-                                        resp = self.vt.scan_file(
-                                            BytesIO(request.file_contents), wait_for_completion=True
-                                        ).to_dict()
+                                        with open(request.file_path, "rb") as f:
+                                            resp = self.vt.scan_file(f, wait_for_completion=True).to_dict()
                                     elif feed == "url":
                                         resp = self.vt.scan_url(d, wait_for_completion=True).to_dict()
                                 except APIError as submit_error:
@@ -112,7 +110,10 @@ class VTClient:
                             raise e
 
                     if resp:
-                        collection[feed].remove(resp["id"] if resp["type"] != "url" else resp["attributes"]["url"])
+                        # Remove the ID from the collection if it exists and add the report to the results
+                        id = resp["id"] if resp["type"] != "url" else resp["attributes"]["url"]
+                        if id in collection[feed]:
+                            collection[feed].remove(id)
                         results.setdefault(feed, []).append(resp)
                         break
 
