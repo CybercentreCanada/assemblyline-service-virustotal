@@ -2,7 +2,6 @@
 
 import base64
 import time
-from io import BytesIO
 from typing import Any, Dict, List
 
 from assemblyline_v4_service.common.request import ServiceRequest
@@ -111,7 +110,10 @@ class VTClient:
                             raise e
 
                     if resp:
-                        collection[feed].remove(resp["id"] if resp["type"] != "url" else resp["attributes"]["url"])
+                        # Remove the ID from the collection if it exists and add the report to the results
+                        id = resp["id"] if resp["type"] != "url" else resp["attributes"]["url"]
+                        if id in collection[feed]:
+                            collection[feed].remove(id)
                         results.setdefault(feed, []).append(resp)
                         break
 
