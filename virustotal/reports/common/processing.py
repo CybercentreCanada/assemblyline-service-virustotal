@@ -103,8 +103,8 @@ class AVResultsProcessor:
                 # Assign the heuristic to the section if it was not already assigned
                 category_section.set_heuristic(heuristic)
 
-            # Only add signatures to the heuristic if they have a score
-            if category_section.heuristic:
+            # Only add signatures to the heuristic if they have a score and there is content in the section
+            if category_section.heuristic and category_section.section_body:
                 category_section.heuristic.add_signature_id(sig, score=category_score)
 
         # Add all categorized AV results to the main section
