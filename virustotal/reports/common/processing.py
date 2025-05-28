@@ -103,12 +103,15 @@ class AVResultsProcessor:
                 # Assign the heuristic to the section if it was not already assigned
                 category_section.set_heuristic(heuristic)
 
-            # Only add signatures to the heuristic if they have a score and there is content in the section
-            if category_section.heuristic and category_section.section_body:
+            # Only add signatures to the heuristic if they have a score
+            if category_section.heuristic:
                 category_section.heuristic.add_signature_id(sig, score=category_score)
 
-        # Add all categorized AV results to the main section
+        # Add all categorized AV results to the main section if there is content in the section
         for _, section in sorted(av_categories.items(), key=lambda x: CATEGORY_SCORING.get(x[0], 0), reverse=True):
+            if not section.body:
+                # Skip empty sections
+                continue
             section.set_column_order(["Result", "Engine Name", "Engine Version", "Engine Update"])
             av_section.add_subsection(section)
 
