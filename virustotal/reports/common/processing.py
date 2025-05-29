@@ -94,10 +94,19 @@ class AVResultsProcessor:
             if report_type == "file":
                 category_section.add_tag("av.virus_name", av_details["result"])
             else:
-                category_section.add_tag(
-                    f"network.static.{report_type if report_type != 'url' else 'uri'}",
-                    report["attributes"].get("url", report["id"]),
-                )
+                tag_type = None
+                if report_type == "url":
+                    tag_type = "network.static.uri"
+                elif report_type == "domain":
+                    tag_type = "network.static.domain"
+                elif report_type == "ip_address":
+                    tag_type = "network.static.ip"
+
+                if tag_type:
+                    category_section.add_tag(
+                        tag_type,
+                        report["attributes"].get("url", report["id"]),
+                    )
 
             if not category_section.heuristic and heuristic:
                 # Assign the heuristic to the section if it was not already assigned
