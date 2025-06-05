@@ -5,7 +5,14 @@ from typing import Any
 
 import regex
 from assemblyline.odm import DOMAIN_ONLY_REGEX, FULL_URI, IP_ONLY_REGEX
-from assemblyline_v4_service.common.result import BODY_FORMAT, Heuristic, ResultJSONSection, ResultSection
+from assemblyline_v4_service.common.result import (
+    BODY_FORMAT,
+    Heuristic,
+    ResultJSONSection,
+    ResultSection,
+    ResultTableSection,
+    TableRow,
+)
 
 
 # Modeling output after PDFId service
@@ -170,6 +177,49 @@ def malware_config_section(malware_config={}) -> ResultSection:
     tag_output(malware_config)
     section = ResultJSONSection("Malware Configuration", tags=tags, heuristic=heur)
     section.set_json(malware_config)
+    return section
+
+
+def signature_section(signature_info={}) -> ResultSection:
+    """Create a ResultSection for signature information.
+
+    Returns:
+        ResultSection: A ResultSection containing the signature information
+
+    """
+    key_title_map = {
+        "signers details": "Signers",
+        "counter signers details": "Counter Signers",
+        "x509": "X509 Certificates",
+    }
+    detail_tag_map = {
+        "algorithm": "cert.signature_algo",
+        "cert issuer": "cert.issuer",
+        "name": "cert.subject",
+        "serial number": "cert.serial_no",
+        "status": "cert.status",
+        "thumbprint": "cert.thumbprint",
+        "valid from": "cert.valid.start",
+        "valid to": "cert.valid.end",
+        "usage": "cert.key_usage",
+    }
+    section = ResultSection("Signature Info")
+    for key, title in key_title_map.items():
+        if signature_info.get(key, None):
+            subsection = ResultTableSection(title)
+            for detail in signature_info[key]:
+                # Add a row for each signature detail in the section
+                subsection.add_row(TableRow(**detail))
+
+                # Add tags for each detail
+                for key, tag in detail_tag_map.items():
+                    if key in detail:
+                        subsection.add_tag(tag, detail[key])
+
+            if subsection.section_body.body:
+                # Add the subsection to the main section if it has rows
+                section.add_subsection(subsection)
+
     return section
 
 

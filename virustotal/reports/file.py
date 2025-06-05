@@ -77,6 +77,10 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
             elif "pdf_info" in k:
                 info_section.add_subsection(info.pdf_section(v, attributes.get("exiftool", {})))
 
+            elif "signature_info" in k:
+                # Signature Info
+                info_section.add_subsection(info.signature_section(v))
+
             # YARA sources
             elif "crowdsourced_yara_results" in k:
                 info_section.add_subsection(info.yara_section(v))
