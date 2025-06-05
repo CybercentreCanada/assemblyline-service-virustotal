@@ -5,7 +5,7 @@ from typing import Any
 
 import regex
 from assemblyline.odm import DOMAIN_ONLY_REGEX, FULL_URI, IP_ONLY_REGEX
-from assemblyline_v4_service.common.result import BODY_FORMAT, Heuristic, ResultJSONSection, ResultSection
+from assemblyline_v4_service.common.result import Heuristic, ResultJSONSection, ResultKeyValueSection, ResultSection
 
 
 # Modeling output after PDFId service
@@ -51,10 +51,9 @@ def pe_section(info={}, exiftool={}, signature={}) -> ResultSection:
     if signature.get("description"):
         header_body["Description"] = signature["description"]
         header_tags["file.pe.versions.description"] = [signature["description"]]
-    header = ResultSection(
+    header = ResultKeyValueSection(
         "PE: HEADER",
-        body=json.dumps(header_body),
-        body_format=BODY_FORMAT.KEY_VALUE,
+        body=header_body,
         tags=header_tags,
         parent=main_section,
     )
@@ -119,10 +118,9 @@ def pe_section(info={}, exiftool={}, signature={}) -> ResultSection:
 
     # RESOURCES-VersionInfo
     if signature:
-        ResultSection(
+        ResultKeyValueSection(
             "PE: RESOURCES",
-            body=json.dumps(signature),
-            body_format=BODY_FORMAT.KEY_VALUE,
+            body=signature,
             parent=main_section,
         )
 
@@ -173,6 +171,49 @@ def malware_config_section(malware_config={}) -> ResultSection:
     return section
 
 
+def signature_section(signature_info={}) -> ResultSection:
+    """Create a ResultSection for signature information.
+
+    Returns:
+        ResultSection: A ResultSection containing the signature information
+
+    """
+    key_title_map = {
+        "signers details": "Signers",
+        "counter signers details": "Counter Signers",
+        "x509": "X509 Certificates",
+    }
+    detail_tag_map = {
+        "algorithm": "cert.signature_algo",
+        "cert issuer": "cert.issuer",
+        "name": "cert.subject",
+        "serial number": "cert.serial_no",
+        "status": "cert.status",
+        "thumbprint": "cert.thumbprint",
+        "valid from": "cert.valid.start",
+        "valid to": "cert.valid.end",
+        "usage": "cert.key_usage",
+    }
+    section = ResultSection("Signature Info")
+    for key, title in key_title_map.items():
+        if signature_info.get(key, None):
+            subsection = ResultSection(title)
+            for detail in signature_info[key]:
+                # Add a row for each signature detail in the section
+                cert_section = ResultKeyValueSection(detail["name"], body=detail, parent=subsection)
+
+                # Add tags for each detail
+                for key, tag in detail_tag_map.items():
+                    if key in detail:
+                        cert_section.add_tag(tag, detail[key])
+
+            if subsection.subsections:
+                # Add the subsection to the main section if it has rows
+                section.add_subsection(subsection)
+
+    return section
+
+
 # Modeling output after YARA service
 def yara_section(rule_matches=[]) -> ResultSection:
     """Create a ResultSection for YARA rule matches.
@@ -195,10 +236,9 @@ def yara_section(rule_matches=[]) -> ResultSection:
             section_body["Description"] = rule["description"]
 
         yara_section.add_subsection(
-            ResultSection(
+            ResultKeyValueSection(
                 title_text=f"[{rule['ruleset_name'].upper()}] {rule['rule_name']}",
-                body=json.dumps(section_body),
-                body_format=BODY_FORMAT.KEY_VALUE,
+                body=section_body,
             )
         )
     return yara_section
