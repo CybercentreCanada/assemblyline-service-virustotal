@@ -5,14 +5,7 @@ from typing import Any
 
 import regex
 from assemblyline.odm import DOMAIN_ONLY_REGEX, FULL_URI, IP_ONLY_REGEX
-from assemblyline_v4_service.common.result import (
-    BODY_FORMAT,
-    Heuristic,
-    ResultJSONSection,
-    ResultSection,
-    ResultTableSection,
-    TableRow,
-)
+from assemblyline_v4_service.common.result import Heuristic, ResultJSONSection, ResultKeyValueSection, ResultSection
 
 
 # Modeling output after PDFId service
@@ -58,10 +51,9 @@ def pe_section(info={}, exiftool={}, signature={}) -> ResultSection:
     if signature.get("description"):
         header_body["Description"] = signature["description"]
         header_tags["file.pe.versions.description"] = [signature["description"]]
-    header = ResultSection(
+    header = ResultKeyValueSection(
         "PE: HEADER",
-        body=json.dumps(header_body),
-        body_format=BODY_FORMAT.KEY_VALUE,
+        body=header_body,
         tags=header_tags,
         parent=main_section,
     )
@@ -126,10 +118,9 @@ def pe_section(info={}, exiftool={}, signature={}) -> ResultSection:
 
     # RESOURCES-VersionInfo
     if signature:
-        ResultSection(
+        ResultKeyValueSection(
             "PE: RESOURCES",
-            body=json.dumps(signature),
-            body_format=BODY_FORMAT.KEY_VALUE,
+            body=signature,
             parent=main_section,
         )
 
@@ -206,17 +197,17 @@ def signature_section(signature_info={}) -> ResultSection:
     section = ResultSection("Signature Info")
     for key, title in key_title_map.items():
         if signature_info.get(key, None):
-            subsection = ResultTableSection(title)
+            subsection = ResultSection(title)
             for detail in signature_info[key]:
                 # Add a row for each signature detail in the section
-                subsection.add_row(TableRow(**detail))
+                cert_section = ResultKeyValueSection(detail["name"], body=detail, parent=subsection)
 
                 # Add tags for each detail
                 for key, tag in detail_tag_map.items():
                     if key in detail:
-                        subsection.add_tag(tag, detail[key])
+                        cert_section.add_tag(tag, detail[key])
 
-            if subsection.section_body.body:
+            if subsection.subsections:
                 # Add the subsection to the main section if it has rows
                 section.add_subsection(subsection)
 
@@ -245,10 +236,9 @@ def yara_section(rule_matches=[]) -> ResultSection:
             section_body["Description"] = rule["description"]
 
         yara_section.add_subsection(
-            ResultSection(
+            ResultKeyValueSection(
                 title_text=f"[{rule['ruleset_name'].upper()}] {rule['rule_name']}",
-                body=json.dumps(section_body),
-                body_format=BODY_FORMAT.KEY_VALUE,
+                body=section_body,
             )
         )
     return yara_section
