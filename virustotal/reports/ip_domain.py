@@ -23,11 +23,15 @@ def v3(doc: dict, av_processor: AVResultsProcessor) -> ResultSection:
     categories = list(set([v.lower() for v in attributes.get("categories", {}).values()]))
     body_dict = {
         "Categories": ", ".join(categories),
-        "Last Modification Date": format_time_from_epoch(attributes["last_modification_date"]),
         "Permalink": f"https://www.virustotal.com/gui/{doc['type']}/{doc['id']}",
     }
     if attributes.get("reputation"):
-        body_dict["Reputation"] = attributes["reputation"]
+        body_dict["Reputation"] = attributes.get("reputation")
+
+    if attributes.get("last_modification_date"):
+        body_dict["Last Modification Date"] = format_time_from_epoch(
+            attributes.get("last_modification_date")
+        )
 
     term = doc["id"]
     main_section = ResultSection(term)
