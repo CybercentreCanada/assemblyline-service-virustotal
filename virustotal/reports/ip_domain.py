@@ -10,7 +10,7 @@ from virustotal.reports.common.processing import AVResultsProcessor, format_time
 Classification = forge.get_classification()
 
 
-def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool) -> ResultSection:
+def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -> ResultSection:
     """Create a ResultSection for a IP/Domain report from VirusTotal API v3.
 
     Returns:

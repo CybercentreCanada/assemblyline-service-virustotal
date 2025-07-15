@@ -212,7 +212,7 @@ class VirusTotal(ServiceBase):
                                 tag = "uri" if relationship_type == "url" else relationship_type
                                 relationship_section.add_subsection(
                                     TAG_TO_MODULE[tag].v3(
-                                        # Score the report IFF it isn't pertaining to an ITW relationship
+                                        # Score the report if and only if it isn't pertaining to an ITW relationship
                                         # ITW relationships can lead users to believe the IOCs are embedded in the file
                                         report,
                                         self.processor,
