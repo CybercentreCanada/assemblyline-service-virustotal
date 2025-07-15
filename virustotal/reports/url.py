@@ -11,7 +11,7 @@ from virustotal.reports.common.processing import AVResultsProcessor, format_time
 Classification = forge.get_classification()
 
 
-def v3(doc: dict, av_processor: AVResultsProcessor) -> ResultSection:
+def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -> ResultSection:
     """Create a ResultSection for a URL report from VirusTotal API v3.
 
     Returns:
@@ -74,7 +74,7 @@ def v3(doc: dict, av_processor: AVResultsProcessor) -> ResultSection:
     # Tags
     main_section.add_tag("network.static.uri", attributes["url"])
 
-    detection_section = av_processor.get_av_results(doc)
+    detection_section = av_processor.get_av_results(doc, score_report)
     if detection_section.subsections:
         main_section.add_subsection(detection_section)
 

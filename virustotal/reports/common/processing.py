@@ -42,7 +42,7 @@ class AVResultsProcessor:
         self.hit_threshold = hit_threshold
 
     # Create a results section based on VT reports
-    def get_av_results(self, report: Dict[str, Any]) -> ResultSection:
+    def get_av_results(self, report: Dict[str, Any], score_report: bool = True) -> ResultSection:
         """Create a ResultSection based on AV reports.
 
         Returns:
@@ -62,7 +62,11 @@ class AVResultsProcessor:
             raise_heuristic = (
                 analysis_stats.get("malicious", 0) + analysis_stats.get("suspicious", 0) > self.hit_threshold
             )
-            heuristic = Heuristic(1 if report_type == "file" else 2) if raise_heuristic and category_score else None
+            heuristic = (
+                Heuristic(1 if report_type == "file" else 2)
+                if raise_heuristic and category_score and score_report
+                else None
+            )
 
             av_categories.setdefault(
                 category,
