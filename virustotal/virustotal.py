@@ -1,6 +1,7 @@
 """Assemblyline service for VirusTotal."""
 
 import re
+from collections import defaultdict
 from urllib.parse import urlparse
 
 from assemblyline.odm.base import IP_ONLY_REGEX
@@ -78,7 +79,7 @@ class VirusTotal(ServiceBase):
         """Start the VirusTotal service."""
         self.log.debug("VirusTotal service started")
 
-    def get_results(self, report_list, tag, title_insert, host_uri_map={}) -> ResultSection:
+    def get_results(self, report_list, tag, title_insert, host_uri_map={}, host_vetting={}) -> ResultSection:
         """Create a ResultSection for the given report list.
 
         Returns:
@@ -93,6 +94,10 @@ class VirusTotal(ServiceBase):
             if section and section.title_text not in section_titles:
                 section_titles.append(section.title_text)
                 if tag in ["ip", "domain"]:
+                    if host_vetting.get(section.title_text, 0) < 0:
+                        # If the host is associated with more non-malicious URLs than malicious ones, then don't score it
+                        section.heuristic = None
+
                     for host, uris in host_uri_map.items():
                         # Check to see if URI is a related to the IP/Domain either directly or as a subdomain
                         if host and (host == section.title_text or host.endswith(f".{section.title_text}")):
@@ -236,15 +241,33 @@ class VirusTotal(ServiceBase):
 
         # Create a map of the domains/IPs and the URIs they're associated to for tagging purposes
         host_uri_map = dict()
+        uri_host_map = dict()
         for uri in query_collection["url"]:
-            host_uri_map.setdefault(urlparse(uri).hostname, []).append(uri)
+            hostname = urlparse(uri).hostname
+            host_uri_map.setdefault(hostname, []).append(uri)
+            uri_host_map[uri] = hostname
+
+        # Create ResultSections for URLs, IPs, and Domains
+        url_section = self.get_results(result_collection["url"], "uri", "URLs")
+
+        # Generate a map of hostnames from the URL reports to see if we can eliminate any FPs that might occur when creating sections based on IP/Domain reports
+
+        # Rationale: Avoid cases where the domain of S3 AWS buckets or other cloud services are flagged as malicious but the URL itself is deemed as non-malicious
+        host_vetting = defaultdict(int)
+        for section in url_section.subsections:
+            if section.heuristic.score:
+                # URL associate to domain scored as malicious
+                host_vetting[section.title_text] += 1
+            else:
+                # URL associated to domain scored as non-malicious
+                host_vetting[section.title_text] -= 1
 
         [
             result.add_section(section)
             for section in [
                 self.get_results(result_collection["url"], "uri", "URLs"),
-                self.get_results(result_collection["ip"], "ip", "IPs", host_uri_map),
-                self.get_results(result_collection["domain"], "domain", "Domains", host_uri_map),
+                self.get_results(result_collection["ip"], "ip", "IPs", host_uri_map, host_vetting),
+                self.get_results(result_collection["domain"], "domain", "Domains", host_uri_map, host_vetting),
             ]
             if section.subsections
         ]
