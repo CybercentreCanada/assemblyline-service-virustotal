@@ -175,6 +175,13 @@ class VirusTotal(ServiceBase):
                 for ioc in ["url", "ip", "domain"]:
                     filter_items(query_collection[ioc])
 
+        # Filter out any potential email domains from the query collection
+        # This can raise FPs as a email domain can coincide with a suspicious site domain
+        query_collection["domain"] = list(
+            set(query_collection["domain"])
+            - {addr.split("@")[1] for addr in request.task.tags.get("network.email.address", [])}
+        )
+
         [self.log.info(f"{k} queries: {len(v)}") for k, v in query_collection.items()]
 
         # Execute a bulk search for VirusTotal data
