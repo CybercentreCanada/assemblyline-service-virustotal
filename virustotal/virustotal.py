@@ -255,7 +255,7 @@ class VirusTotal(ServiceBase):
         # Rationale: Avoid cases where the domain of S3 AWS buckets or other cloud services are flagged as malicious but the URL itself is deemed as non-malicious
         host_vetting = defaultdict(int)
         for section in url_section.subsections:
-            if section.heuristic.score:
+            if section.heuristic and section.heuristic.score:
                 # URL associate to domain scored as malicious
                 host_vetting[section.title_text] += 1
             else:
