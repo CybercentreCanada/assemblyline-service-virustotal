@@ -184,7 +184,7 @@ class VirusTotal(ServiceBase):
         # This can raise FPs as a email domain can coincide with a suspicious site domain
         query_collection["domain"] = list(
             set(query_collection["domain"])
-            - {addr.split("@")[1] for addr in request.task.tags.get("network.email.address", [])}
+            - {addr.split("@")[-1] for addr in request.task.tags.get("network.email.address", [])}
         )
 
         [self.log.info(f"{k} queries: {len(v)}") for k, v in query_collection.items()]
