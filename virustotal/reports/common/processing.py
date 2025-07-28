@@ -59,9 +59,7 @@ class AVResultsProcessor:
             analysis_stats = report["attributes"]["last_analysis_stats"]
 
             # Only raise the heurstic if the number of malicious and suspicious results is above the threshold
-            raise_heuristic = (
-                analysis_stats.get("malicious", 0) + analysis_stats.get("suspicious", 0) > self.hit_threshold
-            )
+            raise_heuristic = analysis_stats.get("malicious", 0) >= self.hit_threshold
             heuristic = (
                 Heuristic(1 if report_type == "file" else 2)
                 if raise_heuristic and category_score and score_report
