@@ -79,6 +79,13 @@ class VirusTotal(ServiceBase):
         """Start the VirusTotal service."""
         self.log.debug("VirusTotal service started")
 
+    def filter_items(self, x_list: list):
+        """Filter items in the list based on safelist regex and exact matches."""
+        regex_matches = list(filter(self.safelist_regex.match, x_list))
+        # Remove on regex and exact matches
+        [x_list.remove(match_item) for match_item in regex_matches]
+        [x_list.remove(x) for x in x_list if any(match_item in x for match_item in self.safelist_match)]
+
     def get_results(self, report_list, tag, title_insert, host_uri_map={}, host_vetting={}) -> ResultSection:
         """Create a ResultSection for the given report list.
 
@@ -95,7 +102,8 @@ class VirusTotal(ServiceBase):
                 section_titles.append(section.title_text)
                 if tag in ["ip", "domain"]:
                     if host_vetting.get(section.title_text, 0) < 0:
-                        # If the host is associated with more non-malicious URLs than malicious ones, then don't score it
+                        # If the host is associated with more non-malicious URLs than malicious ones,
+                        # then don't score it
                         section.heuristic = None
 
                     for host, uris in host_uri_map.items():
@@ -170,15 +178,8 @@ class VirusTotal(ServiceBase):
 
             # Pre-filter network IOCs based on AL safelist
             if self.safelist_regex or self.safelist_match:
-
-                def filter_items(x_list: list):
-                    regex_matches = list(filter(self.safelist_regex.match, x_list))
-                    # Remove on regex and exact matches
-                    [x_list.remove(match_item) for match_item in regex_matches]
-                    [x_list.remove(x) for x in x_list if any(match_item in x for match_item in self.safelist_match)]
-
                 for ioc in ["url", "ip", "domain"]:
-                    filter_items(query_collection[ioc])
+                    self.filter_items(query_collection[ioc])
 
         # Filter out any potential email domains from the query collection
         # This can raise FPs as a email domain can coincide with a suspicious site domain
@@ -216,8 +217,10 @@ class VirusTotal(ServiceBase):
                         # Create a subsection for each relationship type
                         if relationship_type:
                             relationship_section = ResultSection(relationship.replace("_", " ").title())
+                            relations = [d["id"] for d in data["data"]]
+                            self.filter_items(relations)
                             for report in self.client.bulk_search(
-                                {relationship_type: [d["id"] for d in data["data"]]},
+                                {relationship_type: relations},
                                 request,
                                 submit_allowed=dynamic_submit,
                             )[relationship_type]:
@@ -250,9 +253,11 @@ class VirusTotal(ServiceBase):
         # Create ResultSections for URLs, IPs, and Domains
         url_section = self.get_results(result_collection["url"], "uri", "URLs")
 
-        # Generate a map of hostnames from the URL reports to see if we can eliminate any FPs that might occur when creating sections based on IP/Domain reports
+        # Generate a map of hostnames from the URL reports
+        # See if we can eliminate any FPs that might occur when creating sections based on IP/Domain reports
 
-        # Rationale: Avoid cases where the domain of S3 AWS buckets or other cloud services are flagged as malicious but the URL itself is deemed as non-malicious
+        # Rationale: Avoid cases where the domain of S3 AWS buckets or other cloud services are flagged as malicious
+        # but the URL itself is deemed as non-malicious
         host_vetting = defaultdict(int)
         for section in url_section.subsections:
             if section.heuristic and section.heuristic.score:
