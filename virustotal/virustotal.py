@@ -217,8 +217,17 @@ class VirusTotal(ServiceBase):
                         # Create a subsection for each relationship type
                         if relationship_type:
                             relationship_section = ResultSection(relationship.replace("_", " ").title())
-                            relations = [d["id"] for d in data["data"]]
-                            self.filter_items(relations)
+                            if relationship_type == "url":
+                                # Filter URLs based on safelist
+                                url_to_id = {d["context_attributes"]["url"]: d["id"] for d in data["data"]}
+                                relations = list(url_to_id.keys())
+                                self.filter_items(relations)
+                                relations = [url_to_id[r] for r in relations]
+                            else:
+                                # Filter IPs and Domains based on safelist
+                                relations = [d["id"] for d in data["data"]]
+                                self.filter_items(relations)
+
                             for report in self.client.bulk_search(
                                 {relationship_type: relations},
                                 request,
