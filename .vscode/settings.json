@@ -21,6 +21,5 @@
     ],
     "python.testing.pytestEnabled": true,
     "ruff.lint.enable": true,
-    "ruff.configuration": "ruff.toml",
     "ruff.lint.preview": true
 }
