@@ -29,9 +29,7 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
         body_dict["Reputation"] = attributes.get("reputation")
 
     if attributes.get("last_modification_date"):
-        body_dict["Last Modification Date"] = format_time_from_epoch(
-            attributes.get("last_modification_date")
-        )
+        body_dict["Last Modification Date"] = format_time_from_epoch(attributes.get("last_modification_date"))
 
     term = doc["id"]
     main_section = ResultSection(term)
@@ -46,7 +44,8 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
     )
 
     # Tags
-    main_section.add_tag(f"network.static.{doc['type'].split('_')[0].lower()}", term)
+    if score_report:
+        main_section.add_tag(f"network.static.{doc['type'].split('_')[0].lower()}", term)
 
     detection_section = av_processor.get_av_results(doc, score_report)
     if detection_section.subsections:

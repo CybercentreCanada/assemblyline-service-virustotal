@@ -1,6 +1,5 @@
 """Functions to create ResultSections for the VirusTotal service."""
 
-import json
 from typing import Any
 
 import regex
