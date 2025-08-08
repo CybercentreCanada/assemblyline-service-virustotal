@@ -104,7 +104,7 @@ class AVResultsProcessor:
                 elif report_type == "ip_address":
                     tag_type = "network.static.ip"
 
-                if tag_type:
+                if tag_type and score_report:
                     category_section.add_tag(
                         tag_type,
                         report["attributes"].get("url", report["id"]),

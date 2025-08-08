@@ -72,7 +72,8 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
         )
 
     # Tags
-    main_section.add_tag("network.static.uri", attributes["url"])
+    if score_report:
+        main_section.add_tag("network.static.uri", attributes["url"])
 
     detection_section = av_processor.get_av_results(doc, score_report)
     if detection_section.subsections:
