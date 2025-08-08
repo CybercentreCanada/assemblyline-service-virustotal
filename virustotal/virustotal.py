@@ -115,19 +115,23 @@ class VirusTotal(ServiceBase):
 
         if tag in ["ip", "domain", "uri"]:
             # Reorganize sections so that scoring sections are first and non-scoring are last and collapsed
-            sorted_sections = []
+            section_scores = {}
             for section in parent_section.subsections:
-                if not section.heuristic:
+                heuristic = None
+                for subsection in section.subsections[-1].subsections:
+                    if subsection.heuristic:
+                        # Add scored section to the beginning of the list
+                        heuristic = subsection.heuristic
+                        break
+
+                if heuristic:
+                    section_scores[section] = heuristic.score
+                else:
                     # Auto collapse sections where a heuristic wasn't raised
                     section.auto_collapse = True
-                    sorted_sections.append(section)
-                else:
-                    # Add scored section to the beginning of the list
-                    sorted_sections.insert(0, section)
+                    section_scores[section] = 0
             # Sort sections by score
-            sorted_sections = sorted(
-                sorted_sections, key=lambda x: x.heuristic.score if x.heuristic else 0, reverse=True
-            )
+            sorted_sections = [s[0] for s in sorted(section_scores.items(), key=lambda x: x[1], reverse=True)]
 
             parent_section._subsections = sorted_sections
 
@@ -279,7 +283,7 @@ class VirusTotal(ServiceBase):
         [
             result.add_section(section)
             for section in [
-                self.get_results(result_collection["url"], "uri", "URLs"),
+                url_section,
                 self.get_results(result_collection["ip"], "ip", "IPs", host_uri_map, host_vetting),
                 self.get_results(result_collection["domain"], "domain", "Domains", host_uri_map, host_vetting),
             ]
