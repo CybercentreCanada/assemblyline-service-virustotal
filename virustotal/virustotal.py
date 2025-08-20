@@ -209,7 +209,7 @@ class VirusTotal(ServiceBase):
                         if not data.get("data", []):
                             # Skip if no data to create a subsection from
                             continue
-
+                        score_report = relationship.startswith("contacted_")
                         relationship_type = None
                         if "url" in relationship:
                             relationship_type = "url"
@@ -244,7 +244,7 @@ class VirusTotal(ServiceBase):
                                         # ITW relationships can lead users to believe the IOCs are embedded in the file
                                         report,
                                         self.processor,
-                                        score_report=not relationship.startswith("itw_"),
+                                        score_report=score_report,
                                     )
                                 )
                             if relationship_section.subsections:
