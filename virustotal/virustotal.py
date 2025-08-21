@@ -209,7 +209,11 @@ class VirusTotal(ServiceBase):
                         if not data.get("data", []):
                             # Skip if no data to create a subsection from
                             continue
+                            
+                        # Only score the relational reports if they're related to sandbox output
+                        # All other relations we'll still display but just for informational purposes
                         score_report = relationship.startswith("contacted_")
+                        
                         relationship_type = None
                         if "url" in relationship:
                             relationship_type = "url"
@@ -240,8 +244,6 @@ class VirusTotal(ServiceBase):
                                 tag = "uri" if relationship_type == "url" else relationship_type
                                 relationship_section.add_subsection(
                                     TAG_TO_MODULE[tag].v3(
-                                        # Score the report if and only if it isn't pertaining to an ITW relationship
-                                        # ITW relationships can lead users to believe the IOCs are embedded in the file
                                         report,
                                         self.processor,
                                         score_report=score_report,
