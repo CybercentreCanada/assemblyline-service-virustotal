@@ -52,13 +52,31 @@ class AVResultsProcessor:
         av_section = ResultSection("Analysis Results")
         av_categories: Dict[str, ResultTableSection] = {}
         report_type = report["type"]
+        analysis_stats = {}
+
+        # Apply filter on reports based on term blocklist and specified AVs before processing
+        last_analysis_results = []
+        for report in report["attributes"]["last_analysis_results"].values():
+            sig = f"{report['engine_name']}.{report['result']}"
+            if any(term in sig for term in self.term_blocklist):
+                # Term found in signature combination that we wish to block
+                continue
+
+            if self.specified_AVs and report["engine_name"] not in self.specified_AVs:
+                # We only want results from specific AVs
+                continue
+
+            analysis_stats.setdefault(report["category"], 0)
+            analysis_stats[report["category"]] += 1
+
+            last_analysis_results.append(report)
+
         # Create a table of the AV result with null results showing up at the bottom of the table
-        for av_details in report["attributes"]["last_analysis_results"].values():
+        for av_details in last_analysis_results:
             category = av_details["category"]
             category_score = CATEGORY_SCORING.get(category, 0)
-            analysis_stats = report["attributes"]["last_analysis_stats"]
 
-            # Only raise the heurstic if the number of malicious and suspicious results is above the threshold
+            # Only raise the heurstic if the number of malicious results is above the threshold
             raise_heuristic = analysis_stats.get("malicious", 0) >= self.hit_threshold
             heuristic = (
                 Heuristic(1 if report_type == "file" else 2)
@@ -75,17 +93,6 @@ class AVResultsProcessor:
                 ),
             )
             category_section = av_categories[category]
-
-            av = av_details["engine_name"]
-            sig = f"{av}.{av_details['result']}"
-            if any(term in sig for term in self.term_blocklist):
-                # Term found in signature combination that we wish to block
-                continue
-
-            if self.specified_AVs and av not in self.specified_AVs:
-                # We only want results from specific AVs
-                continue
-
             category_section.add_row(
                 TableRow(
                     {k.replace("_", " ").title(): v for k, v in av_details.items() if k not in ["category", "method"]}
