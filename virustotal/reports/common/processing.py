@@ -56,20 +56,20 @@ class AVResultsProcessor:
 
         # Apply filter on reports based on term blocklist and specified AVs before processing
         last_analysis_results = []
-        for report in report["attributes"]["last_analysis_results"].values():
-            sig = f"{report['engine_name']}.{report['result']}"
+        for av_details in report["attributes"]["last_analysis_results"].values():
+            sig = f"{av_details['engine_name']}.{av_details['result']}"
             if any(term in sig for term in self.term_blocklist):
                 # Term found in signature combination that we wish to block
                 continue
 
-            if self.specified_AVs and report["engine_name"] not in self.specified_AVs:
+            if self.specified_AVs and av_details["engine_name"] not in self.specified_AVs:
                 # We only want results from specific AVs
                 continue
 
-            analysis_stats.setdefault(report["category"], 0)
-            analysis_stats[report["category"]] += 1
+            analysis_stats.setdefault(av_details["category"], 0)
+            analysis_stats[av_details["category"]] += 1
 
-            last_analysis_results.append(report)
+            last_analysis_results.append(av_details)
 
         # Create a table of the AV result with null results showing up at the bottom of the table
         for av_details in last_analysis_results:
