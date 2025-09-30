@@ -123,7 +123,9 @@ class AVResultsProcessor:
 
             # Only add signatures to the heuristic if they have a score
             if category_section.heuristic:
-                category_section.heuristic.add_signature_id(sig, score=category_score)
+                category_section.heuristic.add_signature_id(
+                    f"{av_details['engine_name']}.{av_details['result']}", score=category_score
+                )
 
         # Add all categorized AV results to the main section if there is content in the section
         for _, section in sorted(av_categories.items(), key=lambda x: CATEGORY_SCORING.get(x[0], 0), reverse=True):
