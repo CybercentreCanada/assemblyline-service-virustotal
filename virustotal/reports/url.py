@@ -71,6 +71,15 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
             parent=main_section,
         )
 
+    if attributes.get("gti_assessment"):
+        ResultSection(
+            "GTI Assessment",
+            body=attributes["gti_assessment"],
+            parent=main_section,
+            classification=Classification.UNRESTRICTED,
+            auto_collapse=True,
+        )
+
     # Tags
     if score_report:
         main_section.add_tag("network.static.uri", attributes["url"])
