@@ -77,11 +77,8 @@ heuristics:
     max_score: 1000
     signature_score_map:
       # Using the GTI assessment, we can remap the score based on their model
-      benign: 0
       malicious: 1000
       suspicious: 300
-      undetected: 0
-      unknown: 0
   - heur_id: 2
     name: Network IOC Detected
     score: 50
@@ -90,11 +87,8 @@ heuristics:
     max_score: 1000
     signature_score_map:
       # Using the GTI assessment, we can remap the score based on their model
-      benign: 0
       malicious: 1000
       suspicious: 300
-      undetected: 0
-      unknown: 0
 
   - heur_id: 1000
     name: Capability Found

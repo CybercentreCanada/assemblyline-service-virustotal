@@ -144,13 +144,14 @@ class AVResultsProcessor:
                     verdict = "UNKNOWN"
 
             if verdict in ["SUSPICIOUS", "MALICIOUS"]:
-                heuristic.add_signature_id(verdict.lower())
+                heuristic = Heuristic(1 if report_type == "file" else 2, signature=verdict.lower())
                 av_section.set_heuristic(heuristic)
 
             # Include a body to the section to show the GTI assessment details
             av_section.set_body(
-                f"GTI - {gti_assessment['verdict']['value'][8:]} verdict "
-                f"with {gti_assessment['severity']['value'][9:]} severity = {verdict}"
+                f"GTI Assessment: {gti_assessment['verdict']['value'][8:]} verdict "
+                f"with {gti_assessment['severity']['value'][9:]} severity.\n"
+                f"Resolution: {verdict}"
             )
 
         else:
