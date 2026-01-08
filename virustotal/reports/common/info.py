@@ -187,7 +187,6 @@ def signature_section(signature_info={}) -> ResultSection:
         "cert issuer": "cert.issuer",
         "name": "cert.subject",
         "serial number": "cert.serial_no",
-        "status": "cert.status",
         "thumbprint": "cert.thumbprint",
         "valid from": "cert.valid.start",
         "valid to": "cert.valid.end",
