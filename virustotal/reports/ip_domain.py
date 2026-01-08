@@ -1,9 +1,7 @@
 """Module for VirusTotal IP/Domain reports."""
 
-import json
-
 from assemblyline.common import forge
-from assemblyline_v4_service.common.result import BODY_FORMAT, ResultJSONSection, ResultSection
+from assemblyline_v4_service.common.result import ResultKeyValueSection, ResultSection, ResultTextSection
 
 from virustotal.reports.common.processing import AVResultsProcessor, format_time_from_epoch
 
@@ -32,25 +30,15 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
         body_dict["Last Modification Date"] = format_time_from_epoch(attributes.get("last_modification_date"))
 
     term = doc["id"]
-    main_section = ResultSection(term)
+    main_section = ResultTextSection(term)
 
     # Submission meta
-    ResultSection(
+    ResultKeyValueSection(
         "VirusTotal Statistics",
-        body=json.dumps(body_dict),
-        body_format=BODY_FORMAT.KEY_VALUE,
+        body=body_dict,
         parent=main_section,
         classification=Classification.UNRESTRICTED,
     )
-
-    if attributes.get("gti_assessment"):
-        section = ResultJSONSection(
-            "GTI Assessment",
-            parent=main_section,
-            classification=Classification.UNRESTRICTED,
-            auto_collapse=True,
-        )
-        section.set_json(attributes["gti_assessment"])
 
     # Tags
     if score_report:

@@ -2,7 +2,7 @@
 
 from assemblyline.common import forge
 from assemblyline.odm.models.ontology.results import Antivirus
-from assemblyline_v4_service.common.result import Heuristic, ResultJSONSection, ResultKeyValueSection, ResultSection
+from assemblyline_v4_service.common.result import Heuristic, ResultKeyValueSection, ResultSection
 
 from virustotal.reports.common import info
 from virustotal.reports.common.configs import CAPABILITY_LOOKUP
@@ -93,9 +93,6 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
             elif "malware_config" in k:
                 # Malware Config
                 info_section.add_subsection(info.malware_config_section(attributes["malware_config"]))
-            elif "gti_assessment" in k:
-                section = ResultJSONSection("GTI Assessment", parent=info_section)
-                section.set_json(v)
 
         if info_section.subsections:
             main_section.add_subsection(info_section)

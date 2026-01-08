@@ -6,6 +6,7 @@ from typing import Any, Dict, List
 from assemblyline.common import forge
 from assemblyline_v4_service.common.result import (
     Heuristic,
+    ResultJSONSection,
     ResultSection,
     ResultTableSection,
     ResultTextSection,
@@ -14,7 +15,7 @@ from assemblyline_v4_service.common.result import (
 
 Classification = forge.get_classification()
 
-CATEGORY_SCORING = {"SUSPICIOUS": 300, "MALICIOUS": 1000}
+CATEGORY_SCORING = {"suspicious": 300, "malicious": 1000}
 
 
 def format_time_from_epoch(t):
@@ -115,14 +116,6 @@ class AVResultsProcessor:
                         report["attributes"].get("url", report["id"]),
                     )
 
-        # Add all categorized AV results to the main section if there is content in the section
-        for _, section in sorted(av_categories.items(), key=lambda x: CATEGORY_SCORING.get(x[0], 0), reverse=True):
-            if not section.body:
-                # Skip empty sections
-                continue
-            section.set_column_order(["Result", "Engine Name", "Engine Version", "Engine Update"])
-            av_section.add_subsection(section)
-
         # Add scoring heuristic to the main AV section depending on presence of GTI assessment
         if "gti_assessment" in report["attributes"]:
             # GTI assessment present, lower the threshold for raising the heuristic
@@ -154,6 +147,10 @@ class AVResultsProcessor:
                 f"Resolution: {verdict}"
             )
 
+            # Add raw GTI assessment details as a JSON subsection
+            section = ResultJSONSection("GTI Assessment", parent=av_section)
+            section.set_json(gti_assessment)
+
         else:
             # No GTI assessment, use the hit threshold
             av_section.set_body("No GTI Assessment present.")
@@ -177,5 +174,13 @@ class AVResultsProcessor:
                     )
 
                 category_section.set_heuristic(heuristic)
+
+        # Add all categorized AV results to the main section if there is content in the section
+        for _, section in sorted(av_categories.items(), key=lambda x: CATEGORY_SCORING.get(x[0], 0), reverse=True):
+            if not section.body:
+                # Skip empty sections
+                continue
+            section.set_column_order(["Result", "Engine Name", "Engine Version", "Engine Update"])
+            av_section.add_subsection(section)
 
         return av_section

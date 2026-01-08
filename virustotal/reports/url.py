@@ -4,7 +4,12 @@ import json
 
 from assemblyline.common import forge
 from assemblyline_v4_service.common.ontology_helper import OntologyHelper
-from assemblyline_v4_service.common.result import BODY_FORMAT, ResultJSONSection, ResultSection
+from assemblyline_v4_service.common.result import (
+    BODY_FORMAT,
+    ResultKeyValueSection,
+    ResultSection,
+    ResultTextSection,
+)
 
 from virustotal.reports.common.processing import AVResultsProcessor, format_time_from_epoch
 
@@ -50,35 +55,24 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
     if attributes.get("title", None):
         section_title += f" ({attributes['title']})"
 
-    main_section = ResultSection(section_title)
+    main_section = ResultTextSection(section_title)
 
     # Submission meta
-    ResultSection(
+    ResultKeyValueSection(
         "VirusTotal Statistics",
-        body=json.dumps(body_dict),
-        body_format=BODY_FORMAT.KEY_VALUE,
+        body=body_dict,
         parent=main_section,
         classification=Classification.UNRESTRICTED,
     )
 
     submitter = context.get("submitter", None)
     if submitter:
-        ResultSection(
+        ResultKeyValueSection(
             "Submitter details",
-            body=json.dumps(submitter),
-            body_format=BODY_FORMAT.KEY_VALUE,
+            body=submitter,
             classification=Classification.RESTRICTED,
             parent=main_section,
         )
-
-    if attributes.get("gti_assessment"):
-        section = ResultJSONSection(
-            "GTI Assessment",
-            parent=main_section,
-            classification=Classification.UNRESTRICTED,
-            auto_collapse=True,
-        )
-        section.set_json(attributes["gti_assessment"])
 
     # Tags
     if score_report:
