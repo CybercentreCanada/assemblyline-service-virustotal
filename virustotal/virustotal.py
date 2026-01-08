@@ -81,10 +81,11 @@ class VirusTotal(ServiceBase):
 
     def filter_items(self, x_list: list):
         """Filter items in the list based on safelist regex and exact matches."""
-        regex_matches = list(filter(self.safelist_regex.match, x_list))
-        # Remove on regex and exact matches
-        [x_list.remove(match_item) for match_item in regex_matches]
-        [x_list.remove(x) for x in x_list if any(match_item in x for match_item in self.safelist_match)]
+        if self.safelist_regex or self.safelist_match:
+            regex_matches = list(filter(self.safelist_regex.match, x_list))
+            # Remove on regex and exact matches
+            [x_list.remove(match_item) for match_item in regex_matches]
+            [x_list.remove(x) for x in x_list if any(match_item in x for match_item in self.safelist_match)]
 
     def get_results(self, report_list, tag, title_insert, host_uri_map={}, host_vetting={}) -> ResultSection:
         """Create a ResultSection for the given report list.
@@ -181,9 +182,8 @@ class VirusTotal(ServiceBase):
                 query_collection[ioc] = list(set(query_collection[ioc]))
 
             # Pre-filter network IOCs based on AL safelist
-            if self.safelist_regex or self.safelist_match:
-                for ioc in ["url", "ip", "domain"]:
-                    self.filter_items(query_collection[ioc])
+            for ioc in ["url", "ip", "domain"]:
+                self.filter_items(query_collection[ioc])
 
         # Filter out any potential email domains from the query collection
         # This can raise FPs as a email domain can coincide with a suspicious site domain
@@ -209,11 +209,11 @@ class VirusTotal(ServiceBase):
                         if not data.get("data", []):
                             # Skip if no data to create a subsection from
                             continue
-                            
+
                         # Only score the relational reports if they're related to sandbox output
                         # All other relations we'll still display but just for informational purposes
                         score_report = relationship.startswith("contacted_")
-                        
+
                         relationship_type = None
                         if "url" in relationship:
                             relationship_type = "url"

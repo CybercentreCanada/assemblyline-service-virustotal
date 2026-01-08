@@ -26,7 +26,7 @@ class VTClient:
 
         # Initialize VirusTotal client
         if not self.cache_only:
-            self.vt = Client(**vt_client_kwargs)
+            self.vt = Client(**vt_client_kwargs, headers={"x-tool": "assemblyline"})
 
         # Initialize clients to interact with a cache of VirusTotal data
         self.cache: List[CacheClient] = []

@@ -3,7 +3,7 @@
 import json
 
 from assemblyline.common import forge
-from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection
+from assemblyline_v4_service.common.result import BODY_FORMAT, ResultJSONSection, ResultSection
 
 from virustotal.reports.common.processing import AVResultsProcessor, format_time_from_epoch
 
@@ -23,7 +23,7 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
     categories = list(set([v.lower() for v in attributes.get("categories", {}).values()]))
     body_dict = {
         "Categories": ", ".join(categories),
-        "Permalink": f"https://www.virustotal.com/gui/{doc['type']}/{doc['id']}",
+        "Permalink": f"https://www.virustotal.com/gui/{doc['type'].replace('_', '-')}/{doc['id']}",
     }
     if attributes.get("reputation"):
         body_dict["Reputation"] = attributes.get("reputation")
@@ -44,13 +44,13 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
     )
 
     if attributes.get("gti_assessment"):
-        ResultSection(
+        section = ResultJSONSection(
             "GTI Assessment",
-            body=attributes["gti_assessment"],
             parent=main_section,
             classification=Classification.UNRESTRICTED,
             auto_collapse=True,
         )
+        section.set_json(attributes["gti_assessment"])
 
     # Tags
     if score_report:

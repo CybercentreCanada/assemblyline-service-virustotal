@@ -4,11 +4,17 @@ import time
 from typing import Any, Dict, List
 
 from assemblyline.common import forge
-from assemblyline_v4_service.common.result import Heuristic, ResultSection, ResultTableSection, TableRow
+from assemblyline_v4_service.common.result import (
+    Heuristic,
+    ResultSection,
+    ResultTableSection,
+    ResultTextSection,
+    TableRow,
+)
 
 Classification = forge.get_classification()
 
-CATEGORY_SCORING = {"suspicious": 300, "malicious": 1000}
+CATEGORY_SCORING = {"SUSPICIOUS": 300, "MALICIOUS": 1000}
 
 
 def format_time_from_epoch(t):
@@ -49,7 +55,7 @@ class AVResultsProcessor:
             ResultSection: A ResultSection containing the AV reports
 
         """
-        av_section = ResultSection("Analysis Results")
+        av_section = ResultTextSection("Analysis Results")
         av_categories: Dict[str, ResultTableSection] = {}
         report_type = report["type"]
         analysis_stats = {}
@@ -75,14 +81,6 @@ class AVResultsProcessor:
         for av_details in last_analysis_results:
             category = av_details["category"]
             category_score = CATEGORY_SCORING.get(category, 0)
-
-            # Only raise the heurstic if the number of malicious results is above the threshold
-            raise_heuristic = analysis_stats.get("malicious", 0) >= self.hit_threshold
-            heuristic = (
-                Heuristic(1 if report_type == "file" else 2)
-                if raise_heuristic and category_score and score_report
-                else None
-            )
 
             av_categories.setdefault(
                 category,
@@ -117,16 +115,6 @@ class AVResultsProcessor:
                         report["attributes"].get("url", report["id"]),
                     )
 
-            if not category_section.heuristic and heuristic:
-                # Assign the heuristic to the section if it was not already assigned
-                category_section.set_heuristic(heuristic)
-
-            # Only add signatures to the heuristic if they have a score
-            if category_section.heuristic:
-                category_section.heuristic.add_signature_id(
-                    f"{av_details['engine_name']}.{av_details['result']}", score=category_score
-                )
-
         # Add all categorized AV results to the main section if there is content in the section
         for _, section in sorted(av_categories.items(), key=lambda x: CATEGORY_SCORING.get(x[0], 0), reverse=True):
             if not section.body:
@@ -134,5 +122,59 @@ class AVResultsProcessor:
                 continue
             section.set_column_order(["Result", "Engine Name", "Engine Version", "Engine Update"])
             av_section.add_subsection(section)
+
+        # Add scoring heuristic to the main AV section depending on presence of GTI assessment
+        if "gti_assessment" in report["attributes"]:
+            # GTI assessment present, lower the threshold for raising the heuristic
+            heuristic = Heuristic(1 if report_type == "file" else 2)
+            gti_assessment = report["attributes"]["gti_assessment"]
+            verdict = gti_assessment["verdict"]["value"][8:]
+
+            # Check if an analyst has already reviewed the GTI assessment which is more reliable
+            if gti_assessment.get("contributing_factors", {}).get("mandiant_analyst_benign"):
+                verdict = "BENIGN"
+            elif gti_assessment.get("contributing_factors", {}).get("mandiant_analyst_malicious"):
+                verdict = "MALICIOUS"
+
+            if gti_assessment["severity"]["value"] == "SEVERITY_LOW":
+                # Low severity diminishes the verdict's impact
+                if verdict == "MALICIOUS":
+                    verdict = "SUSPICIOUS"
+                elif verdict == "SUSPICIOUS":
+                    verdict = "UNKNOWN"
+
+            if verdict in ["SUSPICIOUS", "MALICIOUS"]:
+                heuristic.add_signature_id(verdict.lower())
+                av_section.set_heuristic(heuristic)
+
+            # Include a body to the section to show the GTI assessment details
+            av_section.set_body(
+                f"GTI - {gti_assessment['verdict']['value'][8:]} verdict "
+                f"with {gti_assessment['severity']['value'][9:]} severity = {verdict}"
+            )
+
+        else:
+            # No GTI assessment, use the hit threshold
+            av_section.set_body("No GTI Assessment present.")
+            raise_heuristic = analysis_stats.get("malicious", 0) >= self.hit_threshold
+            for category, category_section in av_categories.items():
+                category_score = CATEGORY_SCORING.get(category, 0)
+                heuristic = (
+                    Heuristic(1 if report_type == "file" else 2)
+                    if raise_heuristic and category_score and score_report
+                    else None
+                )
+
+                if heuristic:
+                    # Only add signatures to the heuristic if they have a score
+                    for av_details in last_analysis_results:
+                        if av_details["category"] != category:
+                            continue
+
+                    heuristic.add_signature_id(
+                        f"{av_details['engine_name']}.{av_details['result']}", score=category_score
+                    )
+
+                category_section.set_heuristic(heuristic)
 
         return av_section
