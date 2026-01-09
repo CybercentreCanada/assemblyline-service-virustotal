@@ -136,6 +136,10 @@ class VirusTotal(ServiceBase):
 
             parent_section._subsections = sorted_sections
 
+            # Auto collapse relationship sections if all subsections are collapsed
+            if all(s.auto_collapse for s in parent_section.subsections):
+                parent_section.auto_collapse = True
+
         return parent_section
 
     def execute(self, request: ServiceRequest):
@@ -247,6 +251,10 @@ class VirusTotal(ServiceBase):
                                 )
                             if relationship_section.subsections:
                                 file_result.add_subsection(relationship_section)
+
+                            # Auto collapse relationship sections if all subsections are collapsed
+                            if all(s.auto_collapse for s in relationship_section.subsections):
+                                relationship_section.auto_collapse = True
 
                 result.add_section(file_result)
                 file_analysis.attach_ontology(self.ontology, file_report)

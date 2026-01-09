@@ -44,10 +44,11 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
     if score_report:
         main_section.add_tag(f"network.static.{doc['type'].split('_')[0].lower()}", term)
 
-    detection_section = av_processor.get_av_results(doc, score_report)
+    detection_section, collapse_parent = av_processor.get_av_results(doc, score_report)
     if detection_section.subsections:
         main_section.add_subsection(detection_section)
 
+    main_section.auto_collapse = collapse_parent
     return main_section
 
 

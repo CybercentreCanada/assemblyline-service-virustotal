@@ -1,7 +1,7 @@
 """Module for processing AV results from VirusTotal."""
 
 import time
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Tuple
 
 from assemblyline.common import forge
 from assemblyline_v4_service.common.result import (
@@ -39,7 +39,7 @@ class AVResultsProcessor:
         sig_safelist: List[str] = [],
         specified_AVs: List[str] = [],
         hit_threshold: int = 0,
-    ):
+    ) -> Tuple[ResultSection, bool]:
         """Initialize the AVResultsProcessor."""
         self.term_blocklist = term_blocklist
         self.revised_sig_score_map = revised_sig_score_map
@@ -116,6 +116,7 @@ class AVResultsProcessor:
                 category_section.add_tag(tag_type, tag_value)
 
         # Add scoring heuristic to the main AV section depending on presence of GTI assessment
+        collapse_parent = True
         if "gti_assessment" in report["attributes"]:
             # GTI assessment present, lower the threshold for raising the heuristic
             gti_assessment = report["attributes"]["gti_assessment"]
@@ -138,6 +139,7 @@ class AVResultsProcessor:
 
             if verdict in ["SUSPICIOUS", "MALICIOUS"] and score_report:
                 heuristic = Heuristic(1 if report_type == "file" else 2, signature=verdict.lower())
+                collapse_parent = False
                 av_section.set_heuristic(heuristic)
 
             # Include a body to the section to show the GTI assessment details
@@ -172,6 +174,7 @@ class AVResultsProcessor:
                         heuristic.add_signature_id(
                             f"{av_details['engine_name']}.{av_details['result']}", score=category_score
                         )
+                    collapse_parent = False
 
                 category_section.set_heuristic(heuristic)
 
@@ -183,4 +186,4 @@ class AVResultsProcessor:
             section.set_column_order(["Result", "Engine Name", "Engine Version", "Engine Update"])
             av_section.add_subsection(section)
 
-        return av_section
+        return av_section, collapse_parent

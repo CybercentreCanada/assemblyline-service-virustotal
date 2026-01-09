@@ -97,9 +97,10 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
         if info_section.subsections:
             main_section.add_subsection(info_section)
 
-    detections_section = av_processor.get_av_results(doc)
+    detections_section, collapse_parent = av_processor.get_av_results(doc)
     if detections_section.subsections:
         main_section.add_subsection(detections_section)
+    main_section.auto_collapse = collapse_parent
     return main_section
 
 
