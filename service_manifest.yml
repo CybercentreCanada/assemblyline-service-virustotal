@@ -74,13 +74,21 @@ heuristics:
     score: 1000
     filetype: "*"
     description: Antivirus detection found.
-
+    max_score: 1000
+    signature_score_map:
+      # Using the GTI assessment, we can remap the score based on their model
+      malicious: 1000
+      suspicious: 300
   - heur_id: 2
     name: Network IOC Detected
     score: 50
     filetype: "*"
     description: Network IOC detected
     max_score: 1000
+    signature_score_map:
+      # Using the GTI assessment, we can remap the score based on their model
+      malicious: 1000
+      suspicious: 300
 
   - heur_id: 1000
     name: Capability Found

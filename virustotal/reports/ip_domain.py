@@ -1,9 +1,7 @@
 """Module for VirusTotal IP/Domain reports."""
 
-import json
-
 from assemblyline.common import forge
-from assemblyline_v4_service.common.result import BODY_FORMAT, ResultSection
+from assemblyline_v4_service.common.result import ResultKeyValueSection, ResultSection, ResultTextSection
 
 from virustotal.reports.common.processing import AVResultsProcessor, format_time_from_epoch
 
@@ -23,7 +21,7 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
     categories = list(set([v.lower() for v in attributes.get("categories", {}).values()]))
     body_dict = {
         "Categories": ", ".join(categories),
-        "Permalink": f"https://www.virustotal.com/gui/{doc['type']}/{doc['id']}",
+        "Permalink": f"https://www.virustotal.com/gui/{doc['type'].replace('_', '-')}/{doc['id']}",
     }
     if attributes.get("reputation"):
         body_dict["Reputation"] = attributes.get("reputation")
@@ -32,13 +30,12 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
         body_dict["Last Modification Date"] = format_time_from_epoch(attributes.get("last_modification_date"))
 
     term = doc["id"]
-    main_section = ResultSection(term)
+    main_section = ResultTextSection(term)
 
     # Submission meta
-    ResultSection(
+    ResultKeyValueSection(
         "VirusTotal Statistics",
-        body=json.dumps(body_dict),
-        body_format=BODY_FORMAT.KEY_VALUE,
+        body=body_dict,
         parent=main_section,
         classification=Classification.UNRESTRICTED,
     )

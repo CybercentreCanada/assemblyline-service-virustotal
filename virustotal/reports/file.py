@@ -1,10 +1,8 @@
 """Module for processing file reports from VirusTotal API v3."""
 
-import json
-
 from assemblyline.common import forge
 from assemblyline.odm.models.ontology.results import Antivirus
-from assemblyline_v4_service.common.result import BODY_FORMAT, Heuristic, ResultSection
+from assemblyline_v4_service.common.result import Heuristic, ResultKeyValueSection, ResultSection
 
 from virustotal.reports.common import info
 from virustotal.reports.common.configs import CAPABILITY_LOOKUP
@@ -37,28 +35,24 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
     )
 
     # Submission meta
-    ResultSection(
+    ResultKeyValueSection(
         "VirusTotal Statistics",
-        body=json.dumps(
-            {
-                "First Seen": format_time_from_epoch(attributes["first_submission_date"]),
-                "Last Seen": format_time_from_epoch(attributes["last_submission_date"]),
-                "Scan Date": format_time_from_epoch(attributes["last_analysis_date"]),
-                "Community Reputation": attributes["reputation"],
-                "Permalink": f"https://www.virustotal.com/gui/file/{doc['id']}",
-            }
-        ),
-        body_format=BODY_FORMAT.KEY_VALUE,
+        body={
+            "First Seen": format_time_from_epoch(attributes["first_submission_date"]),
+            "Last Seen": format_time_from_epoch(attributes["last_submission_date"]),
+            "Scan Date": format_time_from_epoch(attributes["last_analysis_date"]),
+            "Community Reputation": attributes["reputation"],
+            "Permalink": f"https://www.virustotal.com/gui/file/{doc['id']}",
+        },
         parent=main_section,
         classification=Classification.UNRESTRICTED,
     )
 
     submitter = context.get("submitter", None)
     if submitter:
-        ResultSection(
+        ResultKeyValueSection(
             "Submitter details",
-            body=json.dumps(submitter),
-            body_format=BODY_FORMAT.KEY_VALUE,
+            body=submitter,
             classification=Classification.RESTRICTED,
             parent=main_section,
         )
