@@ -169,9 +169,9 @@ class AVResultsProcessor:
                         if av_details["category"] != category:
                             continue
 
-                    heuristic.add_signature_id(
-                        f"{av_details['engine_name']}.{av_details['result']}", score=category_score
-                    )
+                        heuristic.add_signature_id(
+                            f"{av_details['engine_name']}.{av_details['result']}", score=category_score
+                        )
 
                 category_section.set_heuristic(heuristic)
 
