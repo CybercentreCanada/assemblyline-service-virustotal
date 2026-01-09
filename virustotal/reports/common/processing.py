@@ -118,7 +118,6 @@ class AVResultsProcessor:
         # Add scoring heuristic to the main AV section depending on presence of GTI assessment
         if "gti_assessment" in report["attributes"]:
             # GTI assessment present, lower the threshold for raising the heuristic
-            heuristic = Heuristic(1 if report_type == "file" else 2)
             gti_assessment = report["attributes"]["gti_assessment"]
             verdict = gti_assessment["verdict"]["value"][8:]
             if tag_type:
@@ -137,7 +136,7 @@ class AVResultsProcessor:
                 elif verdict == "SUSPICIOUS":
                     verdict = "UNKNOWN"
 
-            if verdict in ["SUSPICIOUS", "MALICIOUS"]:
+            if verdict in ["SUSPICIOUS", "MALICIOUS"] and score_report:
                 heuristic = Heuristic(1 if report_type == "file" else 2, signature=verdict.lower())
                 av_section.set_heuristic(heuristic)
 
