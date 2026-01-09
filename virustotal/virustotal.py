@@ -210,10 +210,6 @@ class VirusTotal(ServiceBase):
                             # Skip if no data to create a subsection from
                             continue
 
-                        # Only score the relational reports if they're related to sandbox output
-                        # All other relations we'll still display but just for informational purposes
-                        score_report = relationship.startswith("contacted_")
-
                         relationship_type = None
                         if "url" in relationship:
                             relationship_type = "url"
@@ -246,7 +242,7 @@ class VirusTotal(ServiceBase):
                                     TAG_TO_MODULE[tag].v3(
                                         report,
                                         self.processor,
-                                        score_report=score_report,
+                                        score_report=False,
                                     )
                                 )
                             if relationship_section.subsections:
