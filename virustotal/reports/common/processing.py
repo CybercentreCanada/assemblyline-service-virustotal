@@ -61,6 +61,16 @@ class AVResultsProcessor:
         report_type = report["type"]
         analysis_stats = {}
 
+        # Determine tag type and value based on report type
+        tag_type = None
+        tag_value = report["attributes"].get("url", report["id"])
+        if report_type == "url":
+            tag_type = "network.static.uri"
+        elif report_type == "domain":
+            tag_type = "network.static.domain"
+        elif report_type == "ip_address":
+            tag_type = "network.static.ip"
+
         # Apply filter on reports based on term blocklist and specified AVs before processing
         last_analysis_results = []
         for av_details in report["attributes"]["last_analysis_results"].values():
@@ -102,19 +112,8 @@ class AVResultsProcessor:
             if report_type == "file":
                 category_section.add_tag("av.virus_name", av_details["result"])
             else:
-                tag_type = None
-                if report_type == "url":
-                    tag_type = "network.static.uri"
-                elif report_type == "domain":
-                    tag_type = "network.static.domain"
-                elif report_type == "ip_address":
-                    tag_type = "network.static.ip"
-
-                if tag_type and score_report:
-                    category_section.add_tag(
-                        tag_type,
-                        report["attributes"].get("url", report["id"]),
-                    )
+                # Include general network tags for non-file reports
+                category_section.add_tag(tag_type, tag_value)
 
         # Add scoring heuristic to the main AV section depending on presence of GTI assessment
         if "gti_assessment" in report["attributes"]:
@@ -122,15 +121,17 @@ class AVResultsProcessor:
             heuristic = Heuristic(1 if report_type == "file" else 2)
             gti_assessment = report["attributes"]["gti_assessment"]
             verdict = gti_assessment["verdict"]["value"][8:]
-
+            if tag_type:
+                # Add tags based on GTI assessment verdict
+                av_section.add_tag(tag_type, tag_value)
             # Check if an analyst has already reviewed the GTI assessment which is more reliable
             if gti_assessment.get("contributing_factors", {}).get("mandiant_analyst_benign"):
                 verdict = "BENIGN"
             elif gti_assessment.get("contributing_factors", {}).get("mandiant_analyst_malicious"):
                 verdict = "MALICIOUS"
 
-            if gti_assessment["severity"]["value"] == "SEVERITY_LOW":
-                # Low severity diminishes the verdict's impact
+            if gti_assessment["severity"]["value"] == "SEVERITY_LOW" and report_type != "file":
+                # Low severity diminishes the verdict's impact for non-file reports
                 if verdict == "MALICIOUS":
                     verdict = "SUSPICIOUS"
                 elif verdict == "SUSPICIOUS":
