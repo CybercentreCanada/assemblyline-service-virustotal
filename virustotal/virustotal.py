@@ -125,6 +125,9 @@ class VirusTotal(ServiceBase):
                         heuristic = subsection.heuristic
                         break
 
+                # Check if heuristic was raised on the section because of the GTI assessment
+                heuristic = heuristic or section.subsections[-1].heuristic
+
                 if heuristic:
                     section_scores[section] = heuristic.score
                 else:
