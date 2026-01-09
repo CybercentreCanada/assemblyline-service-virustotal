@@ -148,7 +148,7 @@ class AVResultsProcessor:
             )
 
             # Add raw GTI assessment details as a JSON subsection
-            section = ResultJSONSection("GTI Assessment", parent=av_section)
+            section = ResultJSONSection("GTI Assessment", parent=av_section, auto_collapse=True)
             section.set_json(gti_assessment)
 
         else:
