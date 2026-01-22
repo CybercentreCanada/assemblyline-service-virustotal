@@ -5,7 +5,7 @@ from functools import lru_cache
 from hashlib import sha256
 from os import environ
 from time import time
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 from assemblyline.common.isotime import now_as_iso
 from assemblyline.odm.base import SHA256_REGEX
@@ -19,14 +19,14 @@ HASH_MATCHER = re.compile(SHA256_REGEX)
 
 # Add LRU caching to reduce the number of Elasticsearch queries for repeated requests
 @lru_cache(maxsize=LRU_CACHE_SIZE)
-def mget(es_client: Elasticsearch, docs: List[Dict], cache: str) -> List[Dict]:
+def mget(es_client: Elasticsearch, docs: Tuple[Tuple[str, str]], cache: str) -> List[Dict]:
     """Perform an MGET search against Elasticsearch to find all the VirusTotal reports in the collection.
 
     Returns:
         A list of reports.
 
     """
-    return es_client.mget(docs=docs)
+    return es_client.mget(docs=[{"_id": _id, "_index": _index} for _id, _index in docs])
 
 
 class ElasticClient(CacheClient):
@@ -60,7 +60,7 @@ class ElasticClient(CacheClient):
                 id_map.setdefault(feed, []).append(d)
 
                 # Prepare the list of documents to search for
-                docs_list = [{"_id": d, "_index": index} for index in self.indices[feed]]
+                docs_list = ((d, index) for index in self.indices[feed])
 
                 # Iterate over the documents in batches to avoid overwhelming Elasticsearch
                 batch_size = 1000
