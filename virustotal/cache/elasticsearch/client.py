@@ -60,18 +60,19 @@ class ElasticClient(CacheClient):
                 id_map.setdefault(feed, []).append(d)
 
                 # Prepare the list of documents to search for
-                docs_list = ((d, index) for index in self.indices[feed])
+                docs_list = [(d, index) for index in self.indices[feed]]
 
                 # Iterate over the documents in batches to avoid overwhelming Elasticsearch
                 batch_size = 1000
+                docs_length = len(docs_list)
                 i = 0
-                while i * batch_size < len(docs_list):
+                while i * batch_size < docs_length:
                     # Perform the MGET search while using the cached version to reduce redundant searches
                     search_results += [
                         r
                         for r in mget(
                             self.client,
-                            docs=docs_list[i * batch_size : (i + 1) * batch_size],
+                            docs=tuple(docs_list[i * batch_size : (i + 1) * batch_size]),
                             cache=self._cached_version,
                         )["docs"]
                         if r.get("found")
