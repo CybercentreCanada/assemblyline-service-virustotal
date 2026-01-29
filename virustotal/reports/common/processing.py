@@ -109,7 +109,7 @@ class AVResultsProcessor:
             )
 
             # Only include AV tags if the report is a file
-            if report_type == "file":
+            if report_type == "file" and av_details["result"]:
                 category_section.add_tag("av.virus_name", av_details["result"])
             else:
                 # Include general network tags for non-file reports
