@@ -2,6 +2,7 @@
 
 import re
 from collections import defaultdict
+from typing import Any, Dict
 from urllib.parse import urlparse
 
 from assemblyline.odm.base import IP_ONLY_REGEX
@@ -145,6 +146,22 @@ class VirusTotal(ServiceBase):
 
         return parent_section
 
+    @staticmethod
+    def prune_vt3_summary(file: Dict[str, Any]) -> Dict[str, Any]:
+        """Prune the VT3 file object to a small subset including just vendor detection results and file identification.
+        :param result: A raw file attributes object returned from the VT3 API.
+        :return: A subset of this object containing just detection results and file identification information.
+        """
+        keep_keys = ["md5", "sha1", "sha256", "last_analysis_results"]
+
+        return {
+            "attributes": {
+                k: v
+                for k, v in file["attributes"].items() if k in keep_keys
+            }
+        }
+
+
     def execute(self, request: ServiceRequest):
         """Execute the VirusTotal service."""
         # Initialize VirusTotal client along with cache clients, if configured
@@ -206,6 +223,12 @@ class VirusTotal(ServiceBase):
 
         [self.log.info(f"{k} results: {len(v)}") for k, v in result_collection.items()]
 
+        # Initialize VT3 Temp Submission Data
+        request.temp_submission_data["virus_total_vt3_files"] = [
+            VirusTotal.prune_vt3_summary(f)
+            for f in result_collection["file"]
+        ]
+
         # Create ResultSections
         for file_report in result_collection["file"]:
             try:
@@ -259,7 +282,6 @@ class VirusTotal(ServiceBase):
                             if all(s.auto_collapse for s in relationship_section.subsections):
                                 relationship_section.auto_collapse = True
 
-                result.add_section(file_result)
                 file_analysis.attach_ontology(self.ontology, file_report)
             except Exception as e:
                 self.log.error(f"Problem producing {file_report['id']} file report: {e}")
