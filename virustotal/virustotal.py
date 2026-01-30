@@ -152,12 +152,17 @@ class VirusTotal(ServiceBase):
         :param result: A raw file attributes object returned from the VT3 API.
         :return: A subset of this object containing just detection results and file identification information.
         """
-        keep_keys = ["md5", "sha1", "sha256", "last_analysis_results"]
 
         return {
             "attributes": {
                 k: v
-                for k, v in file["attributes"].items() if k in keep_keys
+                for k, v in file["attributes"].items()
+                if k in {
+                    "md5",
+                    "sha1",
+                    "sha256",
+                    "last_analysis_results"
+                }
             }
         }
 
@@ -282,6 +287,7 @@ class VirusTotal(ServiceBase):
                             if all(s.auto_collapse for s in relationship_section.subsections):
                                 relationship_section.auto_collapse = True
 
+                result.add_section(file_result)
                 file_analysis.attach_ontology(self.ontology, file_report)
             except Exception as e:
                 self.log.error(f"Problem producing {file_report['id']} file report: {e}")
