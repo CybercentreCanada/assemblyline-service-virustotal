@@ -14,7 +14,7 @@ resources:
     - repository: PipelineTemplates
       type: github
       name: CybercentreCanada/assemblyline-pipeline-templates
-      ref: refs/heads/main
+      ref: refs/heads/cccs-rs-patch-1
       endpoint: github-repo-sa
       trigger: none
     - repository: unittest-samples
