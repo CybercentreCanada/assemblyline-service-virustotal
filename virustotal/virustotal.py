@@ -157,6 +157,7 @@ class VirusTotal(ServiceBase):
         """
 
         return {
+            "type": "file",
             "attributes": {
                 k: v
                 for k, v in file["attributes"].items()
