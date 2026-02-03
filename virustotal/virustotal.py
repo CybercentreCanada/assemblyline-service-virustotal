@@ -149,8 +149,11 @@ class VirusTotal(ServiceBase):
     @staticmethod
     def prune_vt3_summary(file: Dict[str, Any]) -> Dict[str, Any]:
         """Prune the VT3 file object to a small subset including just vendor detection results and file identification.
-        :param result: A raw file attributes object returned from the VT3 API.
-        :return: A subset of this object containing just detection results and file identification information.
+
+        result: A raw file object returned from the VT3 API.
+
+        Returns:
+            A subset of this object containing just detection results and file identification information.
         """
 
         return {
