@@ -18,6 +18,8 @@ import virustotal.reports.url as url_analysis
 from virustotal.client import VTClient
 from virustotal.reports.common.processing import AVResultsProcessor
 
+from virustotal.report import package_scan_report
+
 TAG_TO_MODULE = {
     "ip": ip_domain_analysis,
     "domain": ip_domain_analysis,
@@ -146,31 +148,6 @@ class VirusTotal(ServiceBase):
 
         return parent_section
 
-    @staticmethod
-    def prune_vt3_summary(file: Dict[str, Any]) -> Dict[str, Any]:
-        """Prune the VT3 file object to a small subset including just vendor detection results and file identification.
-
-        result: A raw file object returned from the VT3 API.
-
-        Returns:
-            A subset of this object containing just detection results and file identification information.
-        """
-
-        return {
-            "type": "file",
-            "attributes": {
-                k: v
-                for k, v in file["attributes"].items()
-                if k in {
-                    "md5",
-                    "sha1",
-                    "sha256",
-                    "last_analysis_results"
-                }
-            }
-        }
-
-
     def execute(self, request: ServiceRequest):
         """Execute the VirusTotal service."""
         # Initialize VirusTotal client along with cache clients, if configured
@@ -233,10 +210,7 @@ class VirusTotal(ServiceBase):
         [self.log.info(f"{k} results: {len(v)}") for k, v in result_collection.items()]
 
         # Initialize VT3 Temp Submission Data
-        request.temp_submission_data["virus_total_vt3_files"] = [
-            VirusTotal.prune_vt3_summary(f)
-            for f in result_collection["file"]
-        ]
+        request.temp_submission_data["virus_total_vt3_files"] = package_scan_report(result_collection["file"])
 
         # Create ResultSections
         for file_report in result_collection["file"]:
