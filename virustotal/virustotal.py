@@ -2,6 +2,7 @@
 
 import re
 from collections import defaultdict
+from typing import Any, Dict
 from urllib.parse import urlparse
 
 from assemblyline.odm.base import IP_ONLY_REGEX
@@ -16,6 +17,8 @@ import virustotal.reports.ip_domain as ip_domain_analysis
 import virustotal.reports.url as url_analysis
 from virustotal.client import VTClient
 from virustotal.reports.common.processing import AVResultsProcessor
+
+from virustotal.report import package_scan_report
 
 TAG_TO_MODULE = {
     "ip": ip_domain_analysis,
@@ -205,6 +208,9 @@ class VirusTotal(ServiceBase):
         result_collection = self.client.bulk_search(query_collection, request, submit_allowed=dynamic_submit)
 
         [self.log.info(f"{k} results: {len(v)}") for k, v in result_collection.items()]
+
+        # Initialize VT3 Temp Submission Data
+        request.temp_submission_data["virus_total_vt3_files"] = package_scan_report(result_collection["file"])
 
         # Create ResultSections
         for file_report in result_collection["file"]:

@@ -17,6 +17,8 @@ enabled: false
 is_external: true
 licence_count: 0
 
+uses_temp_submission_data: true
+
 uses_tags: true
 privileged: true
 
