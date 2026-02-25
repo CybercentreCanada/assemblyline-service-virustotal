@@ -2,7 +2,15 @@
 
 from assemblyline.common import forge
 from assemblyline.odm.models.ontology.results import Antivirus
-from assemblyline_v4_service.common.result import Heuristic, ResultKeyValueSection, ResultSection
+from assemblyline_v4_service.common.result import (
+    Heuristic,
+    KVSectionBody,
+    ResultKeyValueSection,
+    ResultMultiSection,
+    ResultSection,
+    ResultTextSection,
+    URLSectionBody,
+)
 
 from virustotal.reports.common import info
 from virustotal.reports.common.configs import CAPABILITY_LOOKUP
@@ -35,18 +43,28 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
     )
 
     # Submission meta
-    ResultKeyValueSection(
+    meta_section = ResultMultiSection(
         "VirusTotal Statistics",
-        body={
-            "First Seen": format_time_from_epoch(attributes["first_submission_date"]),
-            "Last Seen": format_time_from_epoch(attributes["last_submission_date"]),
-            "Scan Date": format_time_from_epoch(attributes["last_analysis_date"]),
-            "Community Reputation": attributes["reputation"],
-            "Permalink": f"https://www.virustotal.com/gui/file/{doc['id']}",
-        },
         parent=main_section,
         classification=Classification.UNRESTRICTED,
     )
+
+    # Statistics data
+    meta_section.add_section_part(
+        KVSectionBody(
+            **{
+                "First Seen": format_time_from_epoch(attributes["first_submission_date"]),
+                "Last Seen": format_time_from_epoch(attributes["last_submission_date"]),
+                "Scan Date": format_time_from_epoch(attributes["last_analysis_date"]),
+                "Community Reputation": attributes["reputation"],
+            }
+        )
+    )
+
+    # Permalink
+    permalink_section = URLSectionBody()
+    permalink_section.add_url(f"https://www.virustotal.com/gui/file/{doc['id']}")
+    meta_section.add_section_part(permalink_section)
 
     submitter = context.get("submitter", None)
     if submitter:
@@ -81,7 +99,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
 
             elif "crowdsourced_ai_results" in k:
                 [
-                    ResultSection(
+                    ResultTextSection(
                         title_text=f"Code Insight by {s['source']}",
                         body=s["analysis"],
                         heuristic=Heuristic(1001),

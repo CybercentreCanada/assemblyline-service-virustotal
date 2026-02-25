@@ -1,7 +1,12 @@
 """Module for VirusTotal IP/Domain reports."""
 
 from assemblyline.common import forge
-from assemblyline_v4_service.common.result import ResultKeyValueSection, ResultSection, ResultTextSection
+from assemblyline_v4_service.common.result import (
+    KVSectionBody,
+    ResultMultiSection,
+    ResultSection,
+    URLSectionBody,
+)
 
 from virustotal.reports.common.processing import AVResultsProcessor, format_time_from_epoch
 
@@ -21,7 +26,6 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
     categories = list(set([v.lower() for v in attributes.get("categories", {}).values()]))
     body_dict = {
         "Categories": ", ".join(categories),
-        "Permalink": f"https://www.virustotal.com/gui/{doc['type'].replace('_', '-')}/{doc['id']}",
     }
     if attributes.get("reputation"):
         body_dict["Reputation"] = attributes.get("reputation")
@@ -30,16 +34,22 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
         body_dict["Last Modification Date"] = format_time_from_epoch(attributes.get("last_modification_date"))
 
     term = doc["id"]
-    main_section = ResultTextSection(term)
+    main_section = ResultSection(term)
 
     # Submission meta
-    ResultKeyValueSection(
+    meta_section = ResultMultiSection(
         "VirusTotal Statistics",
-        body=body_dict,
         parent=main_section,
         classification=Classification.UNRESTRICTED,
     )
 
+    # Statistics data
+    meta_section.add_section_part(KVSectionBody(**body_dict))
+
+    # Permalink
+    permalink_section = URLSectionBody()
+    permalink_section.add_url(f"https://www.virustotal.com/gui/{doc['type'].replace('_', '-')}/{doc['id']}")
+    meta_section.add_section_part(permalink_section)
     # Tags
     if score_report:
         main_section.add_tag(f"network.static.{doc['type'].split('_')[0].lower()}", term)
