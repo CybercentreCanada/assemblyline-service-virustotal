@@ -52,7 +52,7 @@ def v3(doc, file_name, av_processor: AVResultsProcessor) -> ResultSection:
     # Statistics data
     meta_section.add_section_part(
         KVSectionBody(
-            {
+            **{
                 "First Seen": format_time_from_epoch(attributes["first_submission_date"]),
                 "Last Seen": format_time_from_epoch(attributes["last_submission_date"]),
                 "Scan Date": format_time_from_epoch(attributes["last_analysis_date"]),

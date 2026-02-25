@@ -44,7 +44,7 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
     )
 
     # Statistics data
-    meta_section.add_section_part(KVSectionBody(body_dict))
+    meta_section.add_section_part(KVSectionBody(**body_dict))
 
     # Permalink
     permalink_section = URLSectionBody()
