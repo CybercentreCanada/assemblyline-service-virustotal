@@ -14,6 +14,7 @@ from elasticsearch import Elasticsearch
 from virustotal.cache.client import CacheClient
 
 LRU_CACHE_SIZE = int(environ.get("LRU_CACHE_SIZE", "1024"))
+BATCH_SIZE = int(environ.get("BATCH_SIZE", "1000"))
 HASH_MATCHER = re.compile(SHA256_REGEX)
 
 
@@ -63,21 +64,16 @@ class ElasticClient(CacheClient):
                 docs_list = [(d, index) for index in self.indices[feed]]
 
                 # Iterate over the documents in batches to avoid overwhelming Elasticsearch
-                batch_size = 1000
                 docs_length = len(docs_list)
-                i = 0
-                while i * batch_size < docs_length:
+                for i in range(0, docs_length, BATCH_SIZE):
                     # Perform the MGET search while using the cached version to reduce redundant searches
                     search_results += [
                         r
                         for r in mget(
-                            self.client,
-                            docs=tuple(docs_list[i * batch_size : (i + 1) * batch_size]),
-                            cache=self._cached_version,
+                            self.client, docs=tuple(docs_list[i : i + BATCH_SIZE]), cache=self._cached_version
                         )["docs"]
                         if r.get("found")
                     ]
-                    i += 1
 
         # Sort results by the most recent analysis
         search_results = sorted(
