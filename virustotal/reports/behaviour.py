@@ -261,13 +261,3 @@ def attach_ontology(ontology_helper: OntologyHelper, doc: dict):
             pass
 
     return
-
-    return
-
-    return
-
-    return
-
-    return
-
-    return
