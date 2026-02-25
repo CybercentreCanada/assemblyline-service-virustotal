@@ -7,7 +7,6 @@ from assemblyline_v4_service.common.result import (
     ResultKeyValueSection,
     ResultMultiSection,
     ResultSection,
-    ResultTextSection,
     URLSectionBody,
 )
 
@@ -43,7 +42,7 @@ def v3(doc: dict, av_processor: AVResultsProcessor, score_report: bool = True) -
     if attributes.get("title", None):
         section_title += f" ({attributes['title']})"
 
-    main_section = ResultTextSection(section_title)
+    main_section = ResultSection(section_title)
 
     # Submission meta
     meta_section = ResultMultiSection(
