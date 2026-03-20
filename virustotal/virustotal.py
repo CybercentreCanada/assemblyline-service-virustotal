@@ -16,9 +16,8 @@ import virustotal.reports.file as file_analysis
 import virustotal.reports.ip_domain as ip_domain_analysis
 import virustotal.reports.url as url_analysis
 from virustotal.client import VTClient
-from virustotal.reports.common.processing import AVResultsProcessor
-
 from virustotal.report import package_scan_report
+from virustotal.reports.common.processing import AVResultsProcessor
 
 TAG_TO_MODULE = {
     "ip": ip_domain_analysis,
@@ -114,6 +113,14 @@ class VirusTotal(ServiceBase):
                         # Check to see if URI is a related to the IP/Domain either directly or as a subdomain
                         if host and (host == section.title_text or host.endswith(f".{section.title_text}")):
                             [section.add_tag("network.static.uri", uri) for uri in uris]
+
+                            # Tag the related URIs to the IP/Domain analysis section for better detection
+                            # If the domain/IP is malicious then URIs are considered malicious by association
+                            for subsection in section.subsections:
+                                if subsection.title_text == "Analysis Results":
+                                    [subsection.add_tag("network.static.uri", uri) for uri in uris]
+                                    break
+
                 parent_section.add_subsection(section)
                 module.attach_ontology(self.ontology, report)
 
