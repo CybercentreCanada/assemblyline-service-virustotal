@@ -217,7 +217,9 @@ class VirusTotal(ServiceBase):
         [self.log.info(f"{k} results: {len(v)}") for k, v in result_collection.items()]
 
         # Initialize VT3 Temp Submission Data
-        request.temp_submission_data["virus_total_vt3_files"] = package_scan_report(result_collection["file"])
+        request.temp_submission_data["virus_total_vt3_files"] = package_scan_report(
+            result_collection["file"], request.task.fileinfo
+        )
 
         # Create ResultSections
         for file_report in result_collection["file"]:
