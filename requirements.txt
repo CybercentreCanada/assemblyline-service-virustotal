@@ -1,4 +1,5 @@
 assemblyline
+assemblyline-toolbox>=0.4
 assemblyline-v4-service
 assemblyline-service-utilities
 vt-py==0.17.5
