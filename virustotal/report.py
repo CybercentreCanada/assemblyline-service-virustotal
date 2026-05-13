@@ -2,7 +2,7 @@ import base64
 import gzip
 import io
 import json
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from assemblyline.odm.messages.task import FileInfo
 
@@ -19,9 +19,14 @@ def _zip_text(text_input: str) -> str:
     return base64_encoded
 
 
-def _prune_vt3_summary(file: Dict[str, Any], fileinfo: FileInfo) -> Dict[str, Any]:
+def _prune_vt3_summary(file: Dict[str, Any], fileinfo: FileInfo) -> Optional[Dict[str, Any]]:
     def prune_entry(e):
         return {k: v for k, v in e.items() if k in {"engine_name", "engine_version", "category", "result", "method"}}
+
+    analysis_results = file["attributes"].get("last_analysis_results")
+
+    if analysis_results is None:
+        return None
 
     return {
         "type": "file",
@@ -30,11 +35,13 @@ def _prune_vt3_summary(file: Dict[str, Any], fileinfo: FileInfo) -> Dict[str, An
             "sha1": fileinfo.sha1,
             "sha256": fileinfo.sha256,
             "last_analysis_results": {
-                k: prune_entry(v) for k, v in file["attributes"]["last_analysis_results"].items()
+                k: prune_entry(v) for k, v in analysis_results.items()
             },
         },
     }
 
 
 def package_scan_report(vt3_results: Dict[str, Any], fileinfo: FileInfo) -> str:
-    return _zip_text(json.dumps([_prune_vt3_summary(f, fileinfo) for f in vt3_results]))
+    pruned_reports = [r for p in vt3_results if (r := _prune_vt3_summary(p, fileinfo)) is not None]
+
+    return _zip_text(json.dumps(pruned_reports))
