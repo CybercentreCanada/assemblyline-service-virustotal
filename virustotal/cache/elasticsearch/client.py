@@ -33,10 +33,10 @@ def mget(es_client: Elasticsearch, docs: Tuple[Tuple[str, str]], cache: str) -> 
 class ElasticClient(CacheClient):
     """Cache client that interacts with Elasticsearch."""
 
-    def __init__(self, hosts: List[str], index_aliases: Dict[str, List[str]], apikey: str = None):
+    def __init__(self, hosts: List[str], index_aliases: Dict[str, List[str]], apikey: str = None, timeout: int = 10):
         """Intitialize client to interact with Elasticsearch."""
         self.client = Elasticsearch(
-            hosts=hosts, api_key=apikey, verify_certs=False, max_retries=5, retry_on_timeout=True
+            hosts=hosts, api_key=apikey, verify_certs=False, max_retries=5, retry_on_timeout=True, timeout=timeout
         )
         self.index_aliases = index_aliases
         self.indices = {}

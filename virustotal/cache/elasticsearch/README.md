@@ -53,6 +53,7 @@ config:
         params:
           hosts: ["https://elastic:devpass@localhost:9200"]
           apikey: null
+          timeout: 10
           index_aliases:
             file: ["vt_file"]
             url: ["vt_url"]
